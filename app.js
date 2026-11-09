@@ -6,6 +6,10 @@ const TILE_URL =
 const TILE_ATTRIBUTION =
   "Tiles &copy; Esri — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community";
 const EARTH_RADIUS_METERS = 6_371_000;
+const GPS_SPIKE_MAX_SPEED_METERS_PER_SECOND = 60;
+const GPS_SPIKE_RETURN_DISTANCE_METERS = 100;
+const GPS_SPIKE_MIN_EXCURSION_METERS = 500;
+const GPS_SPIKE_LOOKAHEAD_POINTS = 60;
 const clockFormatter = new Intl.DateTimeFormat(undefined, {
   hour: "2-digit",
   minute: "2-digit",
@@ -28,6 +32,7 @@ const ui = {
   play: document.querySelector("#play-toggle"),
   reset: document.querySelector("#reset"),
   showFullTrack: document.querySelector("#show-full-track"),
+  gpsSpikeCorrection: document.querySelector("#gps-spike-correction"),
   seek: document.querySelector("#seek"),
   speed: document.querySelector("#speed"),
   speedValue: document.querySelector("#speed-value"),
@@ -38,6 +43,7 @@ const ui = {
   drawSyncLine: document.querySelector("#draw-sync-line"),
   status: document.querySelector("#status"),
   trackCount: document.querySelector("#track-count"),
+  toggleTrackDetails: document.querySelector("#toggle-track-details"),
   trackList: document.querySelector("#track-list"),
 };
 
@@ -88,6 +94,55 @@ function distanceMeters(first, second) {
     Math.sin(latitudeDelta / 2) ** 2 +
     Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(longitudeDelta / 2) ** 2;
   return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function detectGpsDropouts(points, nominalSampleSeconds) {
+  const holds = [];
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const previous = points[index - 1];
+    const point = points[index];
+    const intervalSeconds =
+      previous.timestamp !== null && point.timestamp !== null
+        ? point.timestamp - previous.timestamp
+        : nominalSampleSeconds;
+    if (!Number.isFinite(intervalSeconds) || intervalSeconds <= 0) continue;
+    if (distanceMeters(previous, point) / intervalSeconds <= GPS_SPIKE_MAX_SPEED_METERS_PER_SECOND) {
+      continue;
+    }
+
+    const startIndex = index - 1;
+    let maximumDeviation = 0;
+    let endIndex = -1;
+    const lookaheadEnd = Math.min(points.length - 1, index + GPS_SPIKE_LOOKAHEAD_POINTS);
+    for (let candidate = index; candidate <= lookaheadEnd; candidate += 1) {
+      const deviation = distanceMeters(points[startIndex], points[candidate]);
+      maximumDeviation = Math.max(maximumDeviation, deviation);
+      if (
+        candidate > index &&
+        maximumDeviation >= GPS_SPIKE_MIN_EXCURSION_METERS &&
+        deviation <= GPS_SPIKE_RETURN_DISTANCE_METERS
+      ) {
+        endIndex = candidate;
+        break;
+      }
+    }
+    if (endIndex < 0) continue;
+
+    const anchor = points[startIndex];
+    for (let corrected = startIndex + 1; corrected < endIndex; corrected += 1) {
+      points[corrected].lat = anchor.lat;
+      points[corrected].lon = anchor.lon;
+    }
+    const durationSeconds =
+      previous.timestamp !== null && points[endIndex].timestamp !== null
+        ? points[endIndex].timestamp - anchor.timestamp
+        : (endIndex - startIndex) * nominalSampleSeconds;
+    if (Number.isFinite(durationSeconds) && durationSeconds > 0) {
+      holds.push({ startIndex, endIndex, durationSeconds });
+    }
+    index = endIndex;
+  }
+  return holds;
 }
 
 function parseGpx(xmlText) {
@@ -235,10 +290,30 @@ function estimatePointTimes(track, startEpoch, durationSeconds) {
     cumulative.push(cumulative[index - 1] + distanceMeters(track.points[index - 1], track.points[index]));
   }
   const totalDistance = cumulative[cumulative.length - 1];
+  const rawHoldDuration = track.gpsHolds.reduce((total, hold) => total + hold.durationSeconds, 0);
+  const heldDuration = Math.min(rawHoldDuration, durationSeconds * 0.25);
+  const holdScale = rawHoldDuration > 0 ? heldDuration / rawHoldDuration : 1;
+  const holds = track.gpsHolds.map((hold) => ({
+    ...hold,
+    durationSeconds: hold.durationSeconds * holdScale,
+  }));
+  let holdIndex = 0;
+  let completedHoldDuration = 0;
+  const movingDuration = durationSeconds - heldDuration;
   track.points.forEach((point, index) => {
     const fraction = totalDistance > 0 ? cumulative[index] / totalDistance : index / (track.points.length - 1);
-    point.timestamp = startEpoch + durationSeconds * fraction;
-    point.elapsed = durationSeconds * fraction;
+    while (holdIndex < holds.length && index > holds[holdIndex].endIndex) {
+      completedHoldDuration += holds[holdIndex].durationSeconds;
+      holdIndex += 1;
+    }
+    const activeHold = holds[holdIndex];
+    const withinHoldDuration =
+      activeHold && index > activeHold.startIndex && index <= activeHold.endIndex
+        ? activeHold.durationSeconds *
+          ((index - activeHold.startIndex) / (activeHold.endIndex - activeHold.startIndex))
+        : 0;
+    point.elapsed = movingDuration * fraction + completedHoldDuration + withinHoldDuration;
+    point.timestamp = startEpoch + point.elapsed;
   });
   track.approximate = true;
 }
@@ -510,27 +585,20 @@ function trackCard(track) {
     <div class="track-name">
       <input class="track-visibility" type="checkbox" checked>
       <span class="swatch" style="background:${track.color}"></span>
-      <button class="track-details-toggle" type="button" aria-expanded="false">
-        <span class="track-label"></span>
-        <span class="track-details-icon" aria-hidden="true">+</span>
-      </button>
+      <span class="track-label"></span>
+      <span class="track-completion" title="Completion duration"></span>
     </div>
-    <p class="track-detail" hidden></p>
+    <div class="track-detail" hidden>
+      <p class="track-gear"></p>
+      <p class="track-times"></p>
+      <p class="track-metadata"></p>
+    </div>
   `;
-  const label = track.gear ? `${track.name} - ${track.gear}` : track.name;
-  const detailsToggle = card.querySelector(".track-details-toggle");
-  const details = card.querySelector(".track-detail");
-  details.id = `track-details-${tracks.indexOf(track)}`;
-  detailsToggle.setAttribute("aria-controls", details.id);
-  detailsToggle.querySelector(".track-label").textContent = label;
-  detailsToggle.addEventListener("click", () => {
-    const expanded = detailsToggle.getAttribute("aria-expanded") !== "true";
-    detailsToggle.setAttribute("aria-expanded", String(expanded));
-    detailsToggle.querySelector(".track-details-icon").textContent = expanded ? "-" : "+";
-    details.hidden = !expanded;
-    card.classList.toggle("track-card-expanded", expanded);
-  });
-  track.cardDetail = card.querySelector(".track-detail");
+  card.querySelector(".track-label").textContent = track.name;
+  track.cardCompletion = card.querySelector(".track-completion");
+  track.cardGear = card.querySelector(".track-gear");
+  track.cardTimes = card.querySelector(".track-times");
+  track.cardDetail = card.querySelector(".track-metadata");
   const visibility = card.querySelector(".track-visibility");
   visibility.setAttribute("aria-label", `Show ${track.name} on map`);
   visibility.addEventListener("change", () => {
@@ -541,12 +609,37 @@ function trackCard(track) {
   return card;
 }
 
+function setTrackDetailsExpanded(expanded) {
+  ui.toggleTrackDetails.setAttribute("aria-expanded", String(expanded));
+  ui.toggleTrackDetails.textContent = expanded ? "Hide all details" : "Show all details";
+  for (const track of tracks) {
+    const details = track.card.querySelector(".track-detail");
+    details.hidden = !expanded;
+    track.card.classList.toggle("track-card-expanded", expanded);
+  }
+}
+
 function setTrackError(track, message) {
   track.error = message;
   if (track.cardDetail) {
+    track.cardCompletion.textContent = "Unavailable";
+    track.cardCompletion.title = "Completion duration unavailable";
+    track.cardGear.textContent = track.gear ? `Gear: ${track.gear}` : "Gear: not provided";
+    track.cardTimes.textContent = "Start and finish times unavailable";
     track.cardDetail.textContent = message;
     track.cardDetail.classList.add("track-error");
   }
+}
+
+function gpsHoldNote(track) {
+  if (track.gpsHolds.length === 0) return "";
+  const count = track.gpsHolds.length;
+  const rawDuration = track.gpsHolds.reduce((total, hold) => total + hold.durationSeconds, 0);
+  const heldDuration = Math.min(rawDuration, (track.durationSeconds || rawDuration) * 0.25);
+  const estimatedDuration = track.hasTimestamps
+    ? ""
+    : ` (~${formatDuration(Math.ceil(heldDuration))})`;
+  return ` · ${count} GPS jump${count === 1 ? "" : "s"} held at prior position${estimatedDuration}`;
 }
 
 function setTrackTimes(track) {
@@ -558,18 +651,48 @@ function setTrackTimes(track) {
       point.elapsed = point.timestamp - track.absoluteStart;
     });
     track.timingReady = true;
-    track.cardDetail.textContent = `${track.points.length.toLocaleString()} points · ${formatDuration(track.absoluteEnd - track.absoluteStart)}`;
   } else if (track.startTime && track.durationSeconds) {
     const startEpoch = Date.parse(track.startTime) / 1000;
     estimatePointTimes(track, startEpoch, track.durationSeconds);
     track.absoluteStart = startEpoch;
     track.absoluteEnd = startEpoch + track.durationSeconds;
     track.timingReady = true;
-    track.cardDetail.textContent = `${track.points.length.toLocaleString()} points · estimated timing from tracks/tracks.json · ${formatDuration(track.durationSeconds)}`;
-  } else {
-    track.timingReady = false;
-    track.cardDetail.textContent = `${track.points.length.toLocaleString()} points · missing startTime and durationSeconds in tracks/tracks.json`;
   }
+  track.cardGear.textContent = track.gear ? `Gear: ${track.gear}` : "Gear: not provided";
+  if (track.timingReady) {
+    const duration = track.absoluteEnd - track.absoluteStart;
+    track.cardCompletion.textContent = `${track.approximate ? "~ " : ""}${formatDuration(duration)}`;
+    track.cardCompletion.title = track.approximate
+      ? "Estimated completion duration"
+      : "Recorded completion duration";
+    track.cardTimes.textContent =
+      `Start: ${formatClock(track.absoluteStart)} · Finish: ${formatClock(track.absoluteEnd)}`;
+    track.cardDetail.textContent =
+      `${track.points.length.toLocaleString()} points · ${
+        track.approximate ? "Estimated timing" : "Recorded GPX timestamps"
+      }${gpsHoldNote(track)}`;
+  } else {
+    track.cardCompletion.textContent = "Unavailable";
+    track.cardCompletion.title = "Completion duration unavailable";
+    track.cardTimes.textContent = "Start and finish times unavailable";
+    track.cardDetail.textContent =
+      `${track.points.length.toLocaleString()} points · missing startTime and durationSeconds in tracks/tracks.json`;
+  }
+}
+
+function configureGpsSpikeCorrection(track, enabled) {
+  if (!track.sourcePoints) return;
+  track.points = track.sourcePoints.map((point) => ({ ...point }));
+  track.hasTimestamps = track.sourceHasTimestamps;
+  const nominalSampleSeconds =
+    track.hasTimestamps || !track.durationSeconds
+      ? null
+      : track.durationSeconds / (track.points.length - 1);
+  track.gpsHolds = enabled ? detectGpsDropouts(track.points, nominalSampleSeconds) : [];
+  track.fullLine.setLatLngs(trackCoordinates(track));
+  setLayerVisibility(track.fullLine, track.visible && ui.showFullTrack.checked);
+  track.lastIndex = -1;
+  if (track.card) setTrackTimes(track);
 }
 
 function pointTime(track, index, activeMode) {
@@ -801,11 +924,15 @@ function trackCoordinates(track) {
 async function loadTrack(definition) {
   const track = {
     ...definition,
+    order: tracks.length,
     hasTimestamps: true,
     timingReady: false,
     visible: true,
     error: null,
     lastIndex: -1,
+    gpsHolds: [],
+    sourcePoints: null,
+    sourceHasTimestamps: false,
   };
   tracks.push(track);
   track.fullLine = L.polyline([], {
@@ -841,18 +968,29 @@ async function loadTrack(definition) {
     if (!response.ok) throw new Error(`Could not load GPX (${response.status} ${response.statusText}).`);
     const parsed = parseGpx(await response.text());
     track.name = definition.name;
-    track.points = parsed.points;
-    track.hasTimestamps = parsed.hasTimestamps;
-    track.fullLine.setLatLngs(trackCoordinates(track));
+    track.sourcePoints = parsed.points;
+    track.sourceHasTimestamps = parsed.hasTimestamps;
+    configureGpsSpikeCorrection(track, ui.gpsSpikeCorrection.checked);
   } catch (error) {
     track.error = error instanceof Error ? error.message : "Could not load this GPX file.";
     track.points = [];
   }
-  if (ui.showFullTrack.checked) track.fullLine.addTo(map);
   track.card = trackCard(track);
-  ui.trackList.append(track.card);
   if (track.error) setTrackError(track, track.error);
   else setTrackTimes(track);
+}
+
+function sortParticipantList() {
+  const sortedTracks = [...tracks].sort((first, second) => {
+    if (first.timingReady !== second.timingReady) return first.timingReady ? -1 : 1;
+    if (first.timingReady) {
+      const durationDifference =
+        first.absoluteEnd - first.absoluteStart - (second.absoluteEnd - second.absoluteStart);
+      if (durationDifference !== 0) return durationDifference;
+    }
+    return first.order - second.order;
+  });
+  ui.trackList.replaceChildren(...sortedTracks.map((track) => track.card));
 }
 
 function initializeMapBounds() {
@@ -864,6 +1002,10 @@ function initializeMapBounds() {
 
 ui.play.addEventListener("click", startPause);
 ui.drawSyncLine.addEventListener("click", toggleSyncLineDrawing);
+ui.toggleTrackDetails.addEventListener("click", () => {
+  const expanded = ui.toggleTrackDetails.getAttribute("aria-expanded") !== "true";
+  setTrackDetailsExpanded(expanded);
+});
 ui.advancedSettings.addEventListener("toggle", updateSyncLineVisibility);
 map.on("click", handleSyncLineMapClick);
 map.on("mousemove", handleSyncLineMapMove);
@@ -874,6 +1016,14 @@ ui.showFullTrack.addEventListener("change", () => {
   for (const track of tracks) {
     setLayerVisibility(track.fullLine, track.visible && ui.showFullTrack.checked);
   }
+});
+ui.gpsSpikeCorrection.addEventListener("change", () => {
+  pause();
+  for (const track of tracks) {
+    configureGpsSpikeCorrection(track, ui.gpsSpikeCorrection.checked);
+    setTrackSyncPoint(track, syncLine);
+  }
+  refreshTimeline(mode === "relative");
 });
 ui.reset.addEventListener("click", () => {
   pause();
@@ -903,6 +1053,8 @@ async function initialize() {
     const definitions = manifest.tracks;
     ui.trackCount.textContent = String(definitions.length);
     await Promise.all(definitions.map(loadTrack));
+    sortParticipantList();
+    ui.toggleTrackDetails.disabled = false;
     syncLineLayer = L.polyline([], {
       color: "#ffffff",
       opacity: 0.95,
@@ -915,6 +1067,7 @@ async function initialize() {
     setDefaultPlaybackSpeed();
     initializeMapBounds();
     refreshTimeline(true);
+    ui.gpsSpikeCorrection.disabled = false;
   } catch (error) {
     ui.trackCount.textContent = "0";
     ui.status.textContent = error instanceof Error ? error.message : "Could not load the track manifest.";

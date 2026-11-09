@@ -4,12 +4,22 @@
 
 Explore participant GPX tracks around the island course with synchronized playback, an interactive map, and absolute or relative time.
 
+## Run locally
+
+From the project directory, start Python's static server:
+
+```powershell
+python -m http.server 8000
+```
+
+Open [http://localhost:8000](http://localhost:8000). Press `Ctrl+C` in the terminal to stop the server.
+
 ## Using the viewer
 
 - Choose **Absolute** to follow event clock time or **Relative** to align riders at the sync-line crossing.
 - Use **Play**, **Reset**, the race-position slider, and playback-speed control to navigate the race. Pan and zoom the map to inspect the course.
-- Expand **Advanced settings** to show full routes or draw and adjust the relative-time sync line.
-- Select participants in the list to show or hide their tracks; expand a participant row to view GPX details.
+- Expand **Advanced settings** to show full routes, hold position through detected GPS dropouts, or draw and adjust the relative-time sync line.
+- Select participants in the list to show or hide their tracks. Use **Show all details** to view gear, start and finish times, and timing information for every participant.
 
 ## Track timing
 

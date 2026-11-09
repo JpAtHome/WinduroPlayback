@@ -281,6 +281,18 @@ button:disabled {
   margin-bottom: 11px;
 }
 
+.participant-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.participant-actions button {
+  min-width: 0;
+  padding: 5px 8px;
+  font-size: 0.68rem;
+}
+
 .count {
   display: grid;
   width: 22px;
@@ -317,38 +329,17 @@ button:disabled {
   margin-bottom: 7px;
 }
 
-.track-details-toggle {
-  display: flex;
+.track-label {
   min-width: 0;
   flex: 1 1 auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-
-.track-details-toggle:hover {
-  color: #8edfc1;
-}
-
-.track-details-toggle:focus-visible {
-  outline: 2px solid #68d0aa;
-  outline-offset: 3px;
-}
-
-.track-label {
   overflow-wrap: anywhere;
 }
 
-.track-details-icon {
+.track-completion {
   flex: 0 0 auto;
-  color: #8ea0a2;
-  font-size: 0.9rem;
+  color: #a9d8c6;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .track-visibility {
@@ -368,10 +359,16 @@ button:disabled {
 }
 
 .track-detail {
+  display: grid;
+  gap: 4px;
   margin: 0;
   color: #a9b8ba;
   font-size: 0.7rem;
   line-height: 1.4;
+}
+
+.track-detail p {
+  margin: 0;
 }
 
 .track-detail[hidden] {

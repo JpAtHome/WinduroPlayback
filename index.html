@@ -49,6 +49,10 @@
               <input id="show-full-track" type="checkbox">
               <span>Show Full track</span>
             </label>
+            <label class="checkbox-row" for="gps-spike-correction">
+              <input id="gps-spike-correction" type="checkbox" checked disabled>
+              <span>Hold position through GPS dropouts</span>
+            </label>
             <div id="sync-line-controls" class="sync-line-controls" hidden>
               <button id="draw-sync-line" type="button" class="secondary" disabled>Draw sync line</button>
               <p class="hint">Relative mode aligns at the first line crossing (or nearest point). Drag the endpoints or draw a new line; edits last until reload.</p>
@@ -73,7 +77,17 @@
         <section class="participants" aria-labelledby="participants-heading">
           <div class="section-title">
             <h2 id="participants-heading">Participants</h2>
-            <span id="track-count" class="count">0</span>
+            <div class="participant-actions">
+              <span id="track-count" class="count">0</span>
+              <button
+                id="toggle-track-details"
+                class="secondary"
+                type="button"
+                aria-expanded="false"
+                aria-controls="track-list"
+                disabled
+              >Show all details</button>
+            </div>
           </div>
           <div id="track-list" class="track-list"></div>
         </section>
