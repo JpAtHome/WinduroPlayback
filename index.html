@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <title>Winduro Race Playback</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    >
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="map-area" aria-label="Race map">
+        <div id="map" role="application" aria-label="Interactive map showing Winduro participant tracks"></div>
+        <div id="status" class="status" role="status" aria-live="polite">Loading race tracks…</div>
+      </section>
+
+      <aside class="controls">
+        <header class="heading">
+          <p class="eyebrow">WINDURO</p>
+          <h1>Race playback</h1>
+          <p class="subheading">Explore participant tracks together on the course.</p>
+        </header>
+
+        <section class="playback" aria-labelledby="playback-heading">
+          <h2 id="playback-heading">Playback</h2>
+          <div class="clock-row">
+            <output id="clock" class="clock" aria-live="off">--:--:--</output>
+            <label class="mode-control" for="time-mode">
+              <span>Time</span>
+              <select id="time-mode">
+                <option value="absolute">Absolute</option>
+                <option value="relative">Relative</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="play-toggle" type="button" disabled>Play</button>
+            <button id="reset" type="button" class="secondary" disabled>Reset</button>
+          </div>
+          <details id="advanced-settings" class="advanced-settings">
+            <summary>Advanced settings</summary>
+            <label class="checkbox-row" for="show-full-track">
+              <input id="show-full-track" type="checkbox">
+              <span>Show Full track</span>
+            </label>
+            <div id="sync-line-controls" class="sync-line-controls" hidden>
+              <button id="draw-sync-line" type="button" class="secondary" disabled>Draw sync line</button>
+              <p class="hint">Relative mode aligns at the first line crossing (or nearest point). Drag the endpoints or draw a new line; edits last until reload.</p>
+            </div>
+          </details>
+          <label class="slider-label" for="seek">
+            <span>Race position</span>
+            <output id="elapsed">00:00:00</output>
+          </label>
+          <div class="seek-slider">
+            <input id="seek" class="range" type="range" min="0" max="0" value="0" step="1" disabled>
+            <span id="sync-position-marker" class="sync-position-marker" hidden title="Relative time zero: sync-line crossing" aria-hidden="true"></span>
+          </div>
+          <label class="slider-label" for="speed">
+            <span>Playback speed</span>
+            <output id="speed-value">1× · real time</output>
+          </label>
+          <input id="speed" class="range" type="range" min="1" max="500" value="1" step="0.25">
+          <div class="range-ends"><span>1×</span><span id="speed-max">500×</span></div>
+        </section>
+
+        <section class="participants" aria-labelledby="participants-heading">
+          <div class="section-title">
+            <h2 id="participants-heading">Participants</h2>
+            <span id="track-count" class="count">0</span>
+          </div>
+          <div id="track-list" class="track-list"></div>
+        </section>
+
+        <footer class="footer">
+          <p>Map tiles are provided by Esri. Tracks and precise locations are public on this site.</p>
+          <p>Timing for untimed tracks is estimated.</p>
+        </footer>
+      </aside>
+    </main>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

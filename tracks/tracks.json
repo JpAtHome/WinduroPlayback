@@ -1,0 +1,41 @@
+{
+  "syncLine": {
+    "start": [47.565535, -122.192076],
+    "end": [47.565553, -122.196534]
+  },
+  "tracks": [
+    {
+      "name": "Dan O",
+      "file": "Dan_O.gpx",
+      "gear": "Kona longboard and 6.3",
+      "startTime": "2026-11-08T08:10:00-08:00",
+      "durationSeconds": 11443
+    },
+    {
+      "name": "Eric H",
+      "file": "Eric_H.gpx",
+      "gear": "Windsurfer LT and 5.7",
+      "startTime": "2026-11-08T09:19:00-08:00",
+      "durationSeconds": 9060
+    },
+    {
+      "name": "Jon P",
+      "file": "Jon_P.gpx",
+      "gear": "Raceboard and 9.6"
+    },
+    {
+      "name": "Troy V",
+      "file": "Troy_V.gpx",
+      "gear": "Formula board and 8.5",
+      "startTime": "2026-11-08T08:57:00-08:00",
+      "durationSeconds": 13869
+    },
+    {
+      "name": "Nikolay B",
+      "file": "Nikolay_B.gpx",
+      "gear": "Windfoil and 7.0",
+      "startTime": "2026-11-08T09:27:00-08:00",
+      "durationSeconds": 5946
+    }
+  ]
+}
