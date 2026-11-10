@@ -1,5 +1,26 @@
 const TRACK_MANIFEST_URL = new URL("./tracks/tracks.json", document.baseURI);
-const TRACK_COLORS = ["#59d5ff", "#ffcb5b", "#ff7297", "#9d8aff", "#7ee089"];
+const TRACK_COLORS = [
+  "#59d5ff",
+  "#ffcb5b",
+  "#ff7297",
+  "#9d8aff",
+  "#7ee089",
+  "#ff9864",
+  "#f500f5",
+  "#00f500",
+  "#f53100",
+  "#b4da1b",
+  "#f500a3",
+  "#1bdac7",
+  "#009bf5",
+  "#ff2954",
+  "#ed6eed",
+  "#00f572",
+  "#9d5cff",
+  "#f58b00",
+  "#f5d400",
+  "#6eda1b",
+];
 
 const TILE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -48,7 +69,8 @@ const ui = {
 };
 
 const tracks = [];
-let mode = ui.mode.value;
+const DEFAULT_MODE = "relative";
+let mode = DEFAULT_MODE;
 let rangeStart = 0;
 let rangeEnd = 0;
 let currentTime = 0;
@@ -58,6 +80,8 @@ let lastFrameAt = null;
 let lastClockSecond = null;
 let lastClockMode = null;
 let syncLine = null;
+let defaultSyncLine = null;
+let shareStateReady = false;
 let syncLineLayer = null;
 const syncLineHandles = [];
 let drawingSyncLine = false;
@@ -230,6 +254,7 @@ async function loadTrackManifest() {
 
   const files = new Set();
   const names = new Set();
+  const colors = new Set();
   const definitions = manifest.tracks.map((entry, index) => {
     if (!entry || typeof entry.name !== "string" || !entry.name.trim()) {
       throw new Error(`Track ${index + 1} needs a non-empty name in tracks/tracks.json.`);
@@ -255,6 +280,31 @@ async function loadTrackManifest() {
       throw new Error(`${entry.name} gear must be a non-empty string in tracks/tracks.json.`);
     }
 
+    // Keep rendering resilient; CI separately requires explicit colors in the manifest.
+    const hasColor = entry.color !== undefined && entry.color !== null;
+    if (hasColor && (typeof entry.color !== "string" || !/^#[\da-f]{6}$/i.test(entry.color))) {
+      throw new Error(`${entry.name} color must be a six-digit hex color in tracks/tracks.json.`);
+    }
+    const color = (hasColor ? entry.color : TRACK_COLORS[index])?.toLowerCase();
+    if (!color) {
+      throw new Error(`Add a unique color to ${entry.name} or extend the track color palette in app.js.`);
+    }
+    if (colors.has(color)) {
+      throw new Error(`Track colors must be unique; check ${entry.name} in tracks/tracks.json.`);
+    }
+    colors.add(color);
+    const hasSecondaryColor = entry.secondaryColor !== undefined && entry.secondaryColor !== null;
+    if (
+      hasSecondaryColor &&
+      (typeof entry.secondaryColor !== "string" || !/^#[\da-f]{6}$/i.test(entry.secondaryColor))
+    ) {
+      throw new Error(`${entry.name} secondaryColor must be a six-digit hex color in tracks/tracks.json.`);
+    }
+    const secondaryColor = hasSecondaryColor ? entry.secondaryColor.toLowerCase() : null;
+    if (secondaryColor === color) {
+      throw new Error(`${entry.name} color and secondaryColor must be different.`);
+    }
+
     const hasStartTime = entry.startTime !== undefined && entry.startTime !== null;
     const hasDuration = entry.durationSeconds !== undefined && entry.durationSeconds !== null;
     if (hasStartTime !== hasDuration) {
@@ -278,10 +328,119 @@ async function loadTrackManifest() {
       gear: hasGear ? entry.gear.trim() : null,
       startTime: hasStartTime ? entry.startTime : null,
       durationSeconds: hasDuration ? entry.durationSeconds : null,
-      color: TRACK_COLORS[index % TRACK_COLORS.length],
+      color,
+      secondaryColor,
     };
   });
   return { tracks: definitions, syncLine: parsedSyncLine };
+}
+
+function copySyncLine(line) {
+  return {
+    start: { ...line.start },
+    end: { ...line.end },
+  };
+}
+
+function parseSyncLineParameter(value) {
+  const parts = value.split(",");
+  if (parts.length !== 4 || parts.some((part) => part.trim() === "")) return null;
+  const [startLat, startLon, endLat, endLon] = parts.map(Number);
+  const values = [startLat, startLon, endLat, endLon];
+  if (
+    values.some((coordinate) => !Number.isFinite(coordinate)) ||
+    startLat < -90 ||
+    startLat > 90 ||
+    endLat < -90 ||
+    endLat > 90 ||
+    startLon < -180 ||
+    startLon > 180 ||
+    endLon < -180 ||
+    endLon > 180
+  ) {
+    return null;
+  }
+  const line = {
+    start: { lat: startLat, lon: startLon },
+    end: { lat: endLat, lon: endLon },
+  };
+  return distanceMeters(line.start, line.end) >= 1 ? line : null;
+}
+
+function readShareState(manifest) {
+  const params = new URLSearchParams(window.location.search);
+  const warnings = [];
+  let sharedMode = DEFAULT_MODE;
+  if (params.has("mode")) {
+    const requestedMode = params.get("mode");
+    if (requestedMode === "absolute" || requestedMode === "relative") sharedMode = requestedMode;
+    else warnings.push("Ignored invalid time mode in the URL.");
+  }
+
+  let sharedSyncLine = manifest.syncLine;
+  if (params.has("sync")) {
+    const parsedLine = parseSyncLineParameter(params.get("sync"));
+    if (parsedLine) sharedSyncLine = parsedLine;
+    else warnings.push("Ignored invalid sync points in the URL.");
+  }
+
+  let participantNames = null;
+  if (params.has("participants")) {
+    const requestedNames = params.get("participants").split(",").filter(Boolean);
+    const availableNames = new Set(manifest.tracks.map((track) => track.name));
+    const unknownNames = requestedNames.filter((name) => !availableNames.has(name));
+    participantNames = new Set(requestedNames.filter((name) => availableNames.has(name)));
+    if (unknownNames.length > 0) {
+      warnings.push(`Ignored unknown participant${unknownNames.length === 1 ? "" : "s"}: ${unknownNames.join(", ")}.`);
+    }
+  }
+
+  return {
+    mode: sharedMode,
+    syncLine: sharedSyncLine,
+    participantNames,
+    warning: warnings.join(" "),
+  };
+}
+
+function syncLinesMatch(first, second) {
+  return ["start", "end"].every(
+    (endpoint) =>
+      Math.abs(first[endpoint].lat - second[endpoint].lat) < 1e-10 &&
+      Math.abs(first[endpoint].lon - second[endpoint].lon) < 1e-10,
+  );
+}
+
+function updateShareUrl() {
+  if (!shareStateReady) return;
+  const url = new URL(window.location.href);
+  const params = url.searchParams;
+
+  params.delete("mode");
+  if (mode !== DEFAULT_MODE) params.set("mode", mode);
+
+  params.delete("sync");
+  if (!syncLinesMatch(syncLine, defaultSyncLine)) {
+    params.set(
+      "sync",
+      [
+        syncLine.start.lat,
+        syncLine.start.lon,
+        syncLine.end.lat,
+        syncLine.end.lon,
+      ].join(","),
+    );
+  }
+
+  params.delete("participants");
+  if (!tracks.every((track) => track.visible)) {
+    params.set(
+      "participants",
+      tracks.filter((track) => track.visible).map((track) => track.name).join(","),
+    );
+  }
+
+  window.history.replaceState(window.history.state, "", url.href);
 }
 
 function estimatePointTimes(track, startEpoch, durationSeconds) {
@@ -478,6 +637,7 @@ function setSyncLine(line, resetRelativeTimeline = false) {
     currentTime = 0;
     refreshTimeline();
   }
+  updateShareUrl();
 }
 
 function finishSyncLineDrawing() {
@@ -584,7 +744,7 @@ function trackCard(track) {
   card.innerHTML = `
     <div class="track-name">
       <input class="track-visibility" type="checkbox" checked>
-      <span class="swatch" style="background:${track.color}"></span>
+      <span class="swatch"></span>
       <span class="track-label"></span>
       <span class="track-timing-badge" hidden></span>
       <span class="track-completion" title="Completion duration"></span>
@@ -595,6 +755,14 @@ function trackCard(track) {
       <p class="track-metadata"></p>
     </div>
   `;
+  const swatch = card.querySelector(".swatch");
+  if (track.color === "#ffffff") swatch.classList.add("swatch-light");
+  if (track.secondaryColor) {
+    swatch.classList.add("swatch-pair");
+    swatch.style.background = `linear-gradient(90deg, ${track.color} 50%, ${track.secondaryColor} 50%)`;
+  } else {
+    swatch.style.background = track.color;
+  }
   card.querySelector(".track-label").textContent = track.name;
   track.cardTimingBadge = card.querySelector(".track-timing-badge");
   track.cardCompletion = card.querySelector(".track-completion");
@@ -606,6 +774,9 @@ function trackCard(track) {
   visibility.addEventListener("change", () => {
     track.visible = visibility.checked;
     syncTrackVisibility(track);
+    fitVisibleTracks();
+    refreshTimeline();
+    updateShareUrl();
   });
   track.card = card;
   return card;
@@ -710,7 +881,7 @@ function pointTime(track, index, activeMode) {
 }
 
 function getTimelineBounds() {
-  const readyTracks = tracks.filter((track) => track.timingReady && !track.error);
+  const readyTracks = tracks.filter((track) => track.visible && track.timingReady && !track.error);
   if (readyTracks.length === 0) return null;
   if (mode === "relative") {
     const start = Math.min(
@@ -821,13 +992,15 @@ function updateClock(force = false) {
   if (!force && second === lastClockSecond && mode === lastClockMode) return;
   lastClockSecond = second;
   lastClockMode = mode;
-  ui.elapsed.textContent =
-    mode === "absolute" ? formatClock(currentTime) : formatDuration(currentTime - rangeStart);
-  ui.clock.textContent = mode === "absolute" ? formatClock(currentTime) : formatRelativeTime(currentTime);
+  const playbackTime =
+    mode === "absolute" ? formatClock(currentTime) : formatRelativeTime(currentTime);
+  ui.elapsed.textContent = playbackTime;
+  ui.clock.textContent = playbackTime;
   ui.seek.value = String(Math.round(currentTime - rangeStart));
 }
 
 function refreshTimeline(resetPosition = false) {
+  const visibleTracks = tracks.filter((track) => track.visible);
   const bounds = getTimelineBounds();
   if (!bounds || !Number.isFinite(bounds.end) || bounds.end <= bounds.start) {
     pause();
@@ -838,7 +1011,12 @@ function refreshTimeline(resetPosition = false) {
     ui.seek.max = "0";
     ui.clock.textContent = "--:--:--";
     ui.elapsed.textContent = "00:00:00";
-    ui.status.textContent = "Add startTime and durationSeconds for untimed tracks in tracks/tracks.json to enable playback.";
+    ui.status.textContent =
+      visibleTracks.length === 0
+        ? "Select at least one participant to enable playback."
+        : visibleTracks.some((track) => track.error)
+          ? "One or more selected tracks could not be loaded. See participant details."
+          : "Add startTime and durationSeconds for untimed tracks in tracks/tracks.json to enable playback.";
     updateMap(true);
     return;
   }
@@ -856,9 +1034,9 @@ function refreshTimeline(resetPosition = false) {
   if (resetPosition || currentTime < rangeStart || currentTime > rangeEnd) {
     currentTime = mode === "relative" ? 0 : rangeStart;
   }
-  ui.status.textContent = tracks.some((track) => track.error)
+  ui.status.textContent = visibleTracks.some((track) => track.error)
     ? "One or more tracks could not be loaded. See participant details."
-    : tracks.some((track) => !track.timingReady)
+    : visibleTracks.some((track) => !track.timingReady)
       ? "All routes are shown. Add startTime and durationSeconds in tracks/tracks.json to include untimed tracks in playback."
       : "";
   updateClock(true);
@@ -958,8 +1136,8 @@ async function loadTrack(definition) {
   track.marker = L.circleMarker([0, 0], {
     pane: "markerPane",
     radius: 7,
-    color: "#ffffff",
-    weight: 2,
+    color: track.secondaryColor || (track.color === "#ffffff" ? "#26383c" : "#ffffff"),
+    weight: track.secondaryColor ? 3 : 2,
     fillColor: track.color,
     fillOpacity: 1,
     opacity: 0,
@@ -1001,10 +1179,12 @@ function sortParticipantList() {
   ui.trackList.replaceChildren(...sortedTracks.map((track) => track.card));
 }
 
-function initializeMapBounds() {
-  const allPoints = tracks.flatMap((track) => track.points || []);
-  if (allPoints.length === 0) return;
-  const bounds = L.latLngBounds(allPoints.map((point) => [point.lat, point.lon]));
+function fitVisibleTracks() {
+  const visiblePoints = tracks
+    .filter((track) => track.visible && !track.error)
+    .flatMap((track) => track.points || []);
+  if (visiblePoints.length === 0) return;
+  const bounds = L.latLngBounds(visiblePoints.map((point) => [point.lat, point.lon]));
   if (bounds.isValid()) map.fitBounds(bounds.pad(0.08), { maxZoom: 15 });
 }
 
@@ -1052,17 +1232,28 @@ ui.mode.addEventListener("change", () => {
   const bounds = getTimelineBounds();
   if (bounds) currentTime = bounds.start + progress * (bounds.end - bounds.start);
   refreshTimeline();
+  updateShareUrl();
 });
 
 setSpeedLabel();
 async function initialize() {
   try {
     const manifest = await loadTrackManifest();
+    const shareState = readShareState(manifest);
+    mode = shareState.mode;
+    ui.mode.value = mode;
+    defaultSyncLine = copySyncLine(manifest.syncLine);
     const definitions = manifest.tracks;
     ui.trackCount.textContent = String(definitions.length);
     await Promise.all(definitions.map(loadTrack));
     sortParticipantList();
     ui.toggleTrackDetails.disabled = false;
+    if (shareState.participantNames) {
+      for (const track of tracks) {
+        track.visible = shareState.participantNames.has(track.name);
+        track.card.querySelector(".track-visibility").checked = track.visible;
+      }
+    }
     syncLineLayer = L.polyline([], {
       color: "#ffffff",
       opacity: 0.95,
@@ -1070,11 +1261,19 @@ async function initialize() {
       dashArray: "8 6",
       renderer: markerRenderer,
     });
-    setSyncLine(manifest.syncLine);
+    setSyncLine(shareState.syncLine);
+    for (const track of tracks) {
+      if (!track.visible) syncTrackVisibility(track);
+    }
     updateSyncLineControls();
     setDefaultPlaybackSpeed();
-    initializeMapBounds();
+    fitVisibleTracks();
+    shareStateReady = true;
     refreshTimeline(true);
+    updateShareUrl();
+    if (shareState.warning) {
+      ui.status.textContent = [ui.status.textContent, shareState.warning].filter(Boolean).join(" ");
+    }
     ui.gpsSpikeCorrection.disabled = false;
   } catch (error) {
     ui.trackCount.textContent = "0";
