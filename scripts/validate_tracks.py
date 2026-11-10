@@ -53,7 +53,7 @@ def distance_meters(first, second):
     return EARTH_RADIUS_METERS * 2 * math.atan2(math.sqrt(haversine), math.sqrt(1 - haversine))
 
 
-def validate_track_file(track, label, has_timing_metadata, errors):
+def validate_track_file(track, label, timing, has_timing_metadata, start_time, errors):
     filename = track.get("file")
     if not isinstance(filename, str) or not filename.lower().endswith(".gpx"):
         errors.append(f"{label}: file must be a GPX filename.")
@@ -106,12 +106,19 @@ def validate_track_file(track, label, has_timing_metadata, errors):
     if timed_count not in (0, len(points)):
         errors.append(f"{label}: {filename} must have timestamps on every point or none.")
     elif timed_count == len(points):
+        if timing is not None:
+            errors.append(f"{label}: timing is only for tracks without point timestamps.")
         if any(later < earlier for earlier, later in zip(timestamps, timestamps[1:])):
             errors.append(f"{label}: {filename} timestamps must be chronological.")
         if timestamps[-1] <= timestamps[0]:
             errors.append(f"{label}: {filename} timestamps must span a positive duration.")
-    elif not has_timing_metadata:
-        errors.append(f"{label}: {filename} has no point timestamps and needs startTime and durationSeconds.")
+        if start_time is not None and not timestamps[0] <= start_time <= timestamps[-1]:
+            errors.append(f"{label}: startTime must fall within the GPX timestamp range.")
+    elif timed_count == 0:
+        if start_time is not None:
+            errors.append(f"{label}: top-level startTime requires recorded GPX timestamps; put estimated timing under timing.")
+        if not has_timing_metadata:
+            errors.append(f"{label}: {filename} has no point timestamps and needs timing.start and timing.durationSeconds.")
 
 
 def validate():
@@ -194,18 +201,40 @@ def validate():
         if gear is not None and (not isinstance(gear, str) or not gear.strip()):
             errors.append(f"{label}: gear must be a non-empty string when provided.")
 
-        has_start_time = track.get("startTime") is not None
-        has_duration = track.get("durationSeconds") is not None
-        if has_start_time != has_duration:
-            errors.append(f"{label}: startTime and durationSeconds must be provided together.")
-        if has_start_time and parse_iso_datetime(track.get("startTime")) is None:
-            errors.append(f"{label}: startTime must be an ISO 8601 date-time with a timezone.")
-        if has_duration and (
-            not is_number(track.get("durationSeconds")) or track["durationSeconds"] <= 0
-        ):
-            errors.append(f"{label}: durationSeconds must be a positive number.")
+        if track.get("syncTime") is not None:
+            errors.append(f"{label}: syncTime is no longer supported; use top-level startTime.")
+        if "syncAtStart" in track:
+            errors.append(f"{label}: syncAtStart is no longer supported; use top-level startTime.")
+        if track.get("durationSeconds") is not None:
+            errors.append(f"{label}: durationSeconds must be provided inside timing.")
 
-        validate_track_file(track, label, has_start_time and has_duration, errors)
+        start_time = None
+        if track.get("startTime") is not None:
+            start_time = parse_iso_datetime(track["startTime"])
+            if start_time is None:
+                errors.append(f"{label}: startTime must be an ISO 8601 date-time with a timezone.")
+
+        timing = track.get("timing")
+        has_timing_metadata = False
+        if timing is not None:
+            if not isinstance(timing, dict):
+                errors.append(f"{label}: timing must be an object.")
+                timing = None
+            else:
+                has_timing_start = timing.get("start") is not None
+                has_timing_duration = timing.get("durationSeconds") is not None
+                if not has_timing_start or not has_timing_duration:
+                    errors.append(f"{label}: timing must contain both startTime and durationSeconds.")
+                else:
+                    has_timing_metadata = True
+                if has_timing_start and parse_iso_datetime(timing.get("start")) is None:
+                    errors.append(f"{label}: timing.start must be an ISO 8601 date-time with a timezone.")
+                if has_timing_duration and (
+                    not is_number(timing.get("durationSeconds")) or timing["durationSeconds"] <= 0
+                ):
+                    errors.append(f"{label}: timing.durationSeconds must be a positive number.")
+
+        validate_track_file(track, label, timing, has_timing_metadata, start_time, errors)
 
     if errors:
         print("Track-data validation failed:")

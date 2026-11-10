@@ -42,8 +42,10 @@
       "gear": "Windfoil and 7.0",
       "color": "#f04444",
       "secondaryColor": "#009bf5",
-      "startTime": "2026-11-08T09:27:00-08:00",
-      "durationSeconds": 5946
+      "timing": {
+        "start": "2026-11-08T09:27:00-08:00",
+        "durationSeconds": 5946
+      }
     },
     {
       "name": "Dean P",
@@ -55,6 +57,43 @@
       "file": "Greg_M.gpx",
       "color": "#d62828",
       "secondaryColor": "#ffffff"
+    },
+    {
+      "name": "Plamen P",
+      "file": "Plamen_P.gpx",
+      "color": "#1bdac7"
+    },
+    {
+      "name": "Sevena S",
+      "file": "Sevena_S.gpx",
+      "gear": "Windsurfer LT and 6.3 Goya Bonzai",
+      "color": "#d1da12",
+      "secondaryColor": "#7e0932",
+      "startTime": "2026-11-08T17:23:24.000Z"
+    },
+    {
+      "name": "Thomas M",
+      "file": "Thomas_M.gpx",
+      "gear": "200L Lambada Bic, Sailworks Retro 8.5",
+      "color": "#0576c6"
+    },
+    {
+      "name": "Christian F",
+      "file": "Christian_F.gpx",
+      "gear": "WindFoil",
+      "color": "#8e44ad"
+    },
+    {
+      "name": "Montana H",
+      "file": "Montana_H.gpx",
+      "color": "#ff8c00"
+    },
+    {
+      "name": "Stefan K",
+      "file": "Stefan_K.gpx",
+      "gear": "1994 F2 Lightning World Cap Race, 8.5 Neil Pryde V8",
+      "color": "#4169e1",
+      "secondaryColor": "#d3d3d3"
     }
   ]
 }

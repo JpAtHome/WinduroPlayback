@@ -306,20 +306,54 @@ async function loadTrackManifest() {
     }
 
     const hasStartTime = entry.startTime !== undefined && entry.startTime !== null;
-    const hasDuration = entry.durationSeconds !== undefined && entry.durationSeconds !== null;
-    if (hasStartTime !== hasDuration) {
-      throw new Error(`${entry.name} must have both startTime and durationSeconds, or neither.`);
-    }
     if (hasStartTime) {
       const startHasTimezone =
         typeof entry.startTime === "string" &&
         /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(entry.startTime);
       if (!startHasTimezone || !Number.isFinite(Date.parse(entry.startTime))) {
-        throw new Error(`${entry.name} startTime must be an ISO 8601 date-time with a timezone, such as 2026-11-08T17:00:00Z.`);
+        throw new Error(`${entry.name} startTime must be an ISO 8601 date-time with a timezone.`);
       }
-      if (typeof entry.durationSeconds !== "number" || !Number.isFinite(entry.durationSeconds) || entry.durationSeconds <= 0) {
-        throw new Error(`${entry.name} durationSeconds must be a positive number.`);
+    }
+    if (entry.durationSeconds !== undefined && entry.durationSeconds !== null) {
+      throw new Error(`${entry.name} durationSeconds must be provided inside timing.`);
+    }
+    const hasTiming = entry.timing !== undefined && entry.timing !== null;
+    if (hasTiming && (typeof entry.timing !== "object" || Array.isArray(entry.timing))) {
+      throw new Error(`${entry.name} timing must be an object.`);
+    }
+    let timing = null;
+    if (hasTiming) {
+      const hasTimingStart = entry.timing.start !== undefined && entry.timing.start !== null;
+      const hasTimingDuration =
+        entry.timing.durationSeconds !== undefined && entry.timing.durationSeconds !== null;
+      if (!hasTimingStart || !hasTimingDuration) {
+        throw new Error(`${entry.name} timing must contain both startTime and durationSeconds.`);
       }
+      const timingStartHasTimezone =
+        typeof entry.timing.start === "string" &&
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(
+          entry.timing.start,
+        );
+      if (!timingStartHasTimezone || !Number.isFinite(Date.parse(entry.timing.start))) {
+        throw new Error(`${entry.name} timing.start must be an ISO 8601 date-time with a timezone.`);
+      }
+      if (
+        typeof entry.timing.durationSeconds !== "number" ||
+        !Number.isFinite(entry.timing.durationSeconds) ||
+        entry.timing.durationSeconds <= 0
+      ) {
+        throw new Error(`${entry.name} timing.durationSeconds must be a positive number.`);
+      }
+      timing = {
+        start: entry.timing.start,
+        durationSeconds: entry.timing.durationSeconds,
+      };
+    }
+    if (entry.syncTime !== undefined && entry.syncTime !== null) {
+      throw new Error(`${entry.name} syncTime is no longer supported; use startTime.`);
+    }
+    if (entry.syncAtStart !== undefined) {
+      throw new Error(`${entry.name} syncAtStart is no longer supported; use startTime.`);
     }
 
     return {
@@ -327,7 +361,7 @@ async function loadTrackManifest() {
       file: entry.file,
       gear: hasGear ? entry.gear.trim() : null,
       startTime: hasStartTime ? entry.startTime : null,
-      durationSeconds: hasDuration ? entry.durationSeconds : null,
+      timing,
       color,
       secondaryColor,
     };
@@ -538,6 +572,10 @@ function findNearestPointToSyncLine(points, line, origin, latitudeScale) {
 
 function setTrackSyncPoint(track, line) {
   if (!track.timingReady || track.error) return;
+  if (track.startTime && defaultSyncLine && syncLinesMatch(line, defaultSyncLine)) {
+    track.syncElapsed = Date.parse(track.startTime) / 1000 - track.absoluteStart;
+    return;
+  }
 
   const origin = {
     lat: (line.start.lat + line.end.lat) / 2,
@@ -821,21 +859,36 @@ function setTrackTimes(track) {
   track.cardTimingBadge.hidden = !track.approximate;
   if (track.approximate) {
     track.cardTimingBadge.textContent = "ESTIMATED TIME";
-    track.cardTimingBadge.title = "Track timing is estimated from the start time and duration, not recorded GPX timestamps.";
+    track.cardTimingBadge.title = "Track timing is estimated from timing.start and timing.durationSeconds, not recorded GPX timestamps.";
   }
   if (track.hasTimestamps) {
+    if (track.timing) {
+      setTrackError(track, `${track.name} timing is only for tracks without GPX timestamps.`);
+      return;
+    }
     track.absoluteStart = track.points[0].timestamp;
     track.absoluteEnd = track.points[track.points.length - 1].timestamp;
     track.points.forEach((point) => {
       point.elapsed = point.timestamp - track.absoluteStart;
     });
     track.timingReady = true;
-  } else if (track.startTime && track.durationSeconds) {
-    const startEpoch = Date.parse(track.startTime) / 1000;
+  } else if (track.timing) {
+    const startEpoch = Date.parse(track.timing.start) / 1000;
+    track.durationSeconds = track.timing.durationSeconds;
     estimatePointTimes(track, startEpoch, track.durationSeconds);
     track.absoluteStart = startEpoch;
     track.absoluteEnd = startEpoch + track.durationSeconds;
     track.timingReady = true;
+  }
+  if (track.startTime) {
+    const syncTimestamp = Date.parse(track.startTime) / 1000;
+    if (!track.hasTimestamps || syncTimestamp < track.absoluteStart || syncTimestamp > track.absoluteEnd) {
+      setTrackError(
+        track,
+        `${track.name} startTime must be within its recorded GPX timestamps; use timing for estimated tracks.`,
+      );
+      return;
+    }
   }
   track.cardGear.textContent = track.gear ? `Gear: ${track.gear}` : "Gear: not provided";
   if (track.timingReady) {
@@ -849,13 +902,13 @@ function setTrackTimes(track) {
     track.cardDetail.textContent =
       `${track.points.length.toLocaleString()} points · ${
         track.approximate ? "Estimated timing" : "Recorded GPX timestamps"
-      }${gpsHoldNote(track)}`;
+      }${gpsHoldNote(track)}${track.startTime ? " · Default-gate sync uses startTime" : ""}`;
   } else {
     track.cardCompletion.textContent = "Unavailable";
     track.cardCompletion.title = "Completion duration unavailable";
     track.cardTimes.textContent = "Start and finish times unavailable";
     track.cardDetail.textContent =
-      `${track.points.length.toLocaleString()} points · missing startTime and durationSeconds in tracks/tracks.json`;
+      `${track.points.length.toLocaleString()} points · missing timing.start and timing.durationSeconds in tracks/tracks.json`;
   }
 }
 
@@ -1016,7 +1069,7 @@ function refreshTimeline(resetPosition = false) {
         ? "Select at least one participant to enable playback."
         : visibleTracks.some((track) => track.error)
           ? "One or more selected tracks could not be loaded. See participant details."
-          : "Add startTime and durationSeconds for untimed tracks in tracks/tracks.json to enable playback.";
+          : "Add timing.start and timing.durationSeconds for untimed tracks in tracks/tracks.json to enable playback.";
     updateMap(true);
     return;
   }
@@ -1037,7 +1090,7 @@ function refreshTimeline(resetPosition = false) {
   ui.status.textContent = visibleTracks.some((track) => track.error)
     ? "One or more tracks could not be loaded. See participant details."
     : visibleTracks.some((track) => !track.timingReady)
-      ? "All routes are shown. Add startTime and durationSeconds in tracks/tracks.json to include untimed tracks in playback."
+      ? "All routes are shown. Add timing.start and timing.durationSeconds in tracks/tracks.json to include untimed tracks in playback."
       : "";
   updateClock(true);
   updateMap(true);
@@ -1110,6 +1163,7 @@ function trackCoordinates(track) {
 async function loadTrack(definition) {
   const track = {
     ...definition,
+    durationSeconds: definition.timing?.durationSeconds ?? null,
     order: tracks.length,
     hasTimestamps: true,
     timingReady: false,

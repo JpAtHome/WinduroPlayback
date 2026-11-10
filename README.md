@@ -31,6 +31,8 @@ The event manifest is `tracks/tracks.json`; it contains participant details, gea
 
 Before opening a PR, run `python scripts/validate_tracks.py`. GitHub Actions runs the same check for every PR. Each participant needs a unique primary `color`; `secondaryColor` is optional. The check also validates manifest fields, timing metadata, GPX coordinates, and timestamps.
 
+For a timestamped track that needs a manual crossing at the default sync gate, set top-level `startTime` to the intended ISO 8601 timestamp. The override is ignored for non-default gates, where crossings are recalculated from the GPX route. For tracks without point timestamps, put estimated timing in a `timing` object with `start` and `durationSeconds`.
+
 ## Map and data
 
 The map uses [Leaflet 1.9.4](https://leafletjs.com/reference-1.9.4.html) and Esri World Imagery. Imagery attribution is shown on the map; review [Esri's World Imagery terms](https://goto.arcgisonline.com/maps/World_Imagery) and [data attribution guidance](https://www.esri.com/en-us/legal/terms/data-attributions).
