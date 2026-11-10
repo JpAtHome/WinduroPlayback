@@ -32,7 +32,9 @@
     {
       "name": "John McC",
       "file": "John_McC.gpx",
-      "gear": "Mistral Superlight 2 and 7.6"
+      "gear": "Mistral Superlight 2 and 7.6",
+      "color": "#e36a2d",
+      "secondaryColor": "#57bcf1"
     },
     {
       "name": "Troy V",
