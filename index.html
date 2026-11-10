@@ -54,8 +54,11 @@
               <span>Hold position through GPS dropouts</span>
             </label>
             <div id="sync-line-controls" class="sync-line-controls" hidden>
-              <button id="draw-sync-line" type="button" class="secondary" disabled>Draw sync line</button>
-              <p class="hint">Relative mode aligns at the first line crossing (or nearest point). Drag the endpoints or draw a new line; edits last until reload.</p>
+              <div class="sync-line-actions">
+                <button id="draw-sync-line" type="button" class="secondary" disabled>Draw sync line</button>
+                <button id="reset-sync-line" type="button" class="secondary" disabled>Reset sync line</button>
+              </div>
+              <p class="hint">Relative mode aligns at the first line crossing (or nearest point). Checkered points mark the default start/finish line; plain white points indicate a custom sync line. Drag the endpoints or draw a new line; reset restores the default.</p>
             </div>
           </details>
           <label class="slider-label" for="seek">

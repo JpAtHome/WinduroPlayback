@@ -31,6 +31,7 @@ const GPS_SPIKE_MAX_SPEED_METERS_PER_SECOND = 30;
 const GPS_SPIKE_RETURN_DISTANCE_METERS = 100;
 const GPS_SPIKE_MIN_EXCURSION_METERS = 500;
 const GPS_SPIKE_LOOKAHEAD_POINTS = 60;
+const MIN_FINISH_AFTER_SYNC_SECONDS = 30 * 60;
 const clockFormatter = new Intl.DateTimeFormat(undefined, {
   hour: "2-digit",
   minute: "2-digit",
@@ -62,6 +63,7 @@ const ui = {
   syncLineControls: document.querySelector("#sync-line-controls"),
   syncPositionMarker: document.querySelector("#sync-position-marker"),
   drawSyncLine: document.querySelector("#draw-sync-line"),
+  resetSyncLine: document.querySelector("#reset-sync-line"),
   status: document.querySelector("#status"),
   trackCount: document.querySelector("#track-count"),
   toggleTrackDetails: document.querySelector("#toggle-track-details"),
@@ -570,18 +572,56 @@ function findNearestPointToSyncLine(points, line, origin, latitudeScale) {
   return nearestIndex;
 }
 
-function setTrackSyncPoint(track, line) {
-  if (!track.timingReady || track.error) return;
+function getTrackSyncElapsed(track, line) {
+  let syncElapsed = null;
   if (track.startTime && defaultSyncLine && syncLinesMatch(line, defaultSyncLine)) {
-    track.syncElapsed = Date.parse(track.startTime) / 1000 - track.absoluteStart;
-    return;
+    syncElapsed = Date.parse(track.startTime) / 1000 - track.absoluteStart;
+  } else {
+    const origin = {
+      lat: (line.start.lat + line.end.lat) / 2,
+      lon: (line.start.lon + line.end.lon) / 2,
+    };
+    const latitudeScale = 111_320 * Math.cos((origin.lat * Math.PI) / 180);
+    for (let index = 0; index < track.points.length - 1; index += 1) {
+      const fraction = findSegmentIntersectionFraction(
+        track.points[index],
+        track.points[index + 1],
+        line.start,
+        line.end,
+        origin,
+        latitudeScale,
+      );
+      if (fraction === null) continue;
+
+      const first = track.points[index];
+      const second = track.points[index + 1];
+      syncElapsed = first.elapsed + (second.elapsed - first.elapsed) * fraction;
+      break;
+    }
+
+    if (syncElapsed === null) {
+      const nearestIndex = findNearestPointToSyncLine(track.points, line, origin, latitudeScale);
+      syncElapsed = track.points[nearestIndex].elapsed;
+    }
   }
 
+  return syncElapsed;
+}
+
+function setTrackSyncPoint(track, line) {
+  if (!track.timingReady || track.error) return;
+  track.syncElapsed = getTrackSyncElapsed(track, line);
+}
+
+function calculateTrackCompletion(track, line) {
+  if (track.completionCalculated || !track.timingReady || track.error) return;
+  const startElapsed = getTrackSyncElapsed(track, line);
   const origin = {
     lat: (line.start.lat + line.end.lat) / 2,
     lon: (line.start.lon + line.end.lon) / 2,
   };
   const latitudeScale = 111_320 * Math.cos((origin.lat * Math.PI) / 180);
+  let finishElapsed = null;
   for (let index = 0; index < track.points.length - 1; index += 1) {
     const fraction = findSegmentIntersectionFraction(
       track.points[index],
@@ -595,12 +635,19 @@ function setTrackSyncPoint(track, line) {
 
     const first = track.points[index];
     const second = track.points[index + 1];
-    track.syncElapsed = first.elapsed + (second.elapsed - first.elapsed) * fraction;
-    return;
+    const crossingElapsed = first.elapsed + (second.elapsed - first.elapsed) * fraction;
+    if (crossingElapsed - startElapsed < MIN_FINISH_AFTER_SYNC_SECONDS) continue;
+    finishElapsed = crossingElapsed;
+    break;
   }
 
-  const nearestIndex = findNearestPointToSyncLine(track.points, line, origin, latitudeScale);
-  track.syncElapsed = track.points[nearestIndex].elapsed;
+  track.completionCalculated = true;
+  track.finishElapsed = finishElapsed;
+  track.completionStartTime = track.absoluteStart + startElapsed;
+  track.completionTime =
+    finishElapsed === null ? track.absoluteEnd : track.absoluteStart + finishElapsed;
+  track.completionDuration = Math.max(0, track.completionTime - track.completionStartTime);
+  if (track.card) setTrackTimes(track);
 }
 
 function updateSyncLineLayer(line = syncLine) {
@@ -610,22 +657,46 @@ function updateSyncLineLayer(line = syncLine) {
   ]);
 }
 
+function isDefaultSyncLine(line) {
+  return Boolean(line && defaultSyncLine && syncLinesMatch(line, defaultSyncLine));
+}
+
+function syncLineHandleIcon(line) {
+  return L.divIcon({
+    className: `sync-line-handle${isDefaultSyncLine(line) ? " sync-line-handle-default" : ""}`,
+    html: "",
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+  });
+}
+
+function updateSyncLineHandleAppearance(line = syncLine) {
+  const isDefault = isDefaultSyncLine(line);
+  for (const handle of syncLineHandles) {
+    const element = handle.getElement();
+    if (!element) continue;
+    element.classList.toggle("sync-line-handle-default", isDefault);
+    element.style.backgroundImage = isDefault ? "" : "none";
+  }
+}
+
+function updateSyncLineHandleIcons(line = syncLine) {
+  for (const handle of syncLineHandles) handle.setIcon(syncLineHandleIcon(line));
+}
+
 function createSyncLineHandle(endpoint) {
   const marker = L.marker([0, 0], {
     draggable: true,
-    icon: L.divIcon({
-      className: "sync-line-handle",
-      html: "",
-      iconSize: [18, 18],
-      iconAnchor: [9, 9],
-    }),
+    icon: syncLineHandleIcon(syncLine),
     title: `Drag to move the sync-line ${endpoint} point`,
   }).addTo(map);
   marker.dragging?.disable();
   marker.on("drag", () => {
     const position = marker.getLatLng();
     const point = { lat: position.lat, lon: position.lng };
-    updateSyncLineLayer({ ...syncLine, [endpoint]: point });
+    const line = { ...syncLine, [endpoint]: point };
+    updateSyncLineLayer(line);
+    updateSyncLineHandleAppearance(line);
   });
   marker.on("dragend", () => {
     const position = marker.getLatLng();
@@ -656,6 +727,7 @@ function updateSyncLineVisibility() {
     if (mode === "relative") handle.dragging?.enable();
     else handle.dragging?.disable();
   }
+  updateSyncLineHandleAppearance();
   if (syncLineLayer) setLayerVisibility(syncLineLayer, true);
 }
 
@@ -668,6 +740,9 @@ function setSyncLine(line, resetRelativeTimeline = false) {
   }
   syncLineHandles[0].setLatLng([syncLine.start.lat, syncLine.start.lon]);
   syncLineHandles[1].setLatLng([syncLine.end.lat, syncLine.end.lon]);
+  updateSyncLineHandleIcons();
+  updateSyncLineHandleAppearance();
+  ui.resetSyncLine.disabled = !syncLineLayer || isDefaultSyncLine(syncLine);
   updateSyncLineVisibility();
 
   if (resetRelativeTimeline && mode === "relative") {
@@ -702,6 +777,7 @@ function updateSyncLineControls() {
   const showControls = mode === "relative";
   ui.syncLineControls.hidden = !showControls;
   ui.drawSyncLine.disabled = !syncLineLayer;
+  ui.resetSyncLine.disabled = !syncLineLayer || isDefaultSyncLine(syncLine);
   if (!showControls) cancelSyncLineDrawing();
   updateSyncLineVisibility();
 }
@@ -892,17 +968,28 @@ function setTrackTimes(track) {
   }
   track.cardGear.textContent = track.gear ? `Gear: ${track.gear}` : "Gear: not provided";
   if (track.timingReady) {
-    const duration = track.absoluteEnd - track.absoluteStart;
-    track.cardCompletion.textContent = `${track.approximate ? "* " : ""}${formatDuration(duration)}`;
-    track.cardCompletion.title = track.approximate
-      ? "Estimated completion duration"
-      : "Recorded completion duration";
+    const completionStartTime = Number.isFinite(track.completionStartTime)
+      ? track.completionStartTime
+      : track.absoluteStart;
+    const completionTime = Number.isFinite(track.completionTime)
+      ? track.completionTime
+      : track.absoluteEnd;
+    const completionDuration = Number.isFinite(track.completionDuration)
+      ? track.completionDuration
+      : track.absoluteEnd - track.absoluteStart;
+    const finishMethod = Number.isFinite(track.finishElapsed)
+      ? "finish-line crossing"
+      : "end of recorded track";
+    track.cardCompletion.textContent = `${track.approximate ? "* " : ""}${formatDuration(completionDuration)}`;
+    track.cardCompletion.title = `${track.approximate ? "Estimated " : ""}duration from sync start to ${finishMethod}.`;
     track.cardTimes.textContent =
-      `Start: ${formatClock(track.absoluteStart)} · Finish: ${formatClock(track.absoluteEnd)}`;
+      `Start: ${formatClock(completionStartTime)} · Finish: ${formatClock(completionTime)}`;
     track.cardDetail.textContent =
       `${track.points.length.toLocaleString()} points · ${
         track.approximate ? "Estimated timing" : "Recorded GPX timestamps"
-      }${gpsHoldNote(track)}${track.startTime ? " · Default-gate sync uses startTime" : ""}`;
+      }${gpsHoldNote(track)}${track.startTime ? " · Default-gate sync uses startTime" : ""} · ${
+        Number.isFinite(track.finishElapsed) ? "Finish-line crossing used" : "Track end used"
+      }`;
   } else {
     track.cardCompletion.textContent = "Unavailable";
     track.cardCompletion.title = "Completion duration unavailable";
@@ -1138,7 +1225,7 @@ function setSpeedLabel() {
 function setDefaultPlaybackSpeed() {
   const durations = tracks
     .filter((track) => track.timingReady && !track.error)
-    .map((track) => track.absoluteEnd - track.absoluteStart)
+    .map((track) => track.completionDuration)
     .sort((first, second) => first - second);
   if (durations.length === 0) return;
 
@@ -1224,8 +1311,9 @@ function sortParticipantList() {
   const sortedTracks = [...tracks].sort((first, second) => {
     if (first.timingReady !== second.timingReady) return first.timingReady ? -1 : 1;
     if (first.timingReady) {
-      const durationDifference =
-        first.absoluteEnd - first.absoluteStart - (second.absoluteEnd - second.absoluteStart);
+      const firstDuration = first.completionDuration ?? first.absoluteEnd - first.absoluteStart;
+      const secondDuration = second.completionDuration ?? second.absoluteEnd - second.absoluteStart;
+      const durationDifference = firstDuration - secondDuration;
       if (durationDifference !== 0) return durationDifference;
     }
     return first.order - second.order;
@@ -1244,6 +1332,10 @@ function fitVisibleTracks() {
 
 ui.play.addEventListener("click", startPause);
 ui.drawSyncLine.addEventListener("click", toggleSyncLineDrawing);
+ui.resetSyncLine.addEventListener("click", () => {
+  if (!defaultSyncLine || isDefaultSyncLine(syncLine)) return;
+  setSyncLine(copySyncLine(defaultSyncLine), true);
+});
 ui.toggleTrackDetails.addEventListener("click", () => {
   const expanded = ui.toggleTrackDetails.getAttribute("aria-expanded") !== "true";
   setTrackDetailsExpanded(expanded);
@@ -1300,6 +1392,7 @@ async function initialize() {
     const definitions = manifest.tracks;
     ui.trackCount.textContent = String(definitions.length);
     await Promise.all(definitions.map(loadTrack));
+    for (const track of tracks) calculateTrackCompletion(track, defaultSyncLine);
     sortParticipantList();
     ui.toggleTrackDetails.disabled = false;
     if (shareState.participantNames) {

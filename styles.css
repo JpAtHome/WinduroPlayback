@@ -183,6 +183,12 @@ select {
   justify-self: start;
 }
 
+.sync-line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .sync-line-controls .hint {
   margin: 0;
 }
@@ -193,10 +199,13 @@ select {
   border: 2px solid #ffffff;
   border-radius: 50%;
   background-color: #ffffff;
+  box-shadow: 0 0 0 1px #111111, 0 1px 5px #000000aa;
+}
+
+.sync-line-handle-default {
   background-image: repeating-conic-gradient(#111111 0% 25%, #ffffff 0% 50%);
   background-position: 50%;
   background-size: 8px 8px;
-  box-shadow: 0 0 0 1px #111111, 0 1px 5px #000000aa;
 }
 
 
