@@ -394,11 +394,27 @@ button:disabled {
   padding: 2px 5px;
   border: 1px solid #43565b;
   border-radius: 999px;
-  background: #20343a;
-  color: #c7d9dc;
   font-size: 0.58rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.track-discipline-badge[data-discipline="Windsurf"] {
+  border-color: #4f9a9f;
+  background: #1d3c42;
+  color: #bcebed;
+}
+
+.track-discipline-badge[data-discipline="Windfoil"] {
+  border-color: #8062a6;
+  background: #302744;
+  color: #d8c5f0;
+}
+
+.track-discipline-badge[data-discipline="Wingfoil"] {
+  border-color: #b2853e;
+  background: #44351f;
+  color: #f3d9a8;
 }
 
 .track-completion {
@@ -417,21 +433,28 @@ button:disabled {
   cursor: pointer;
 }
 
-.swatch {
-  width: 9px;
-  height: 9px;
+.participant-color-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
   flex: 0 0 auto;
+  border: 1px solid rgb(255 255 255 / 75%);
   border-radius: 50%;
 }
 
-.swatch-light {
-  border: 1px solid #53656a;
+.participant-marker-icon {
+  border: 0;
+  background: transparent;
 }
 
-.swatch-pair {
-  width: 15px;
-  border: 1px solid #53656a;
-  border-radius: 3px;
+.participant-map-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: 1px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #111111, 0 1px 5px #000000aa;
 }
 
 .track-detail {
@@ -480,6 +503,96 @@ button:disabled {
 }
 
 .status:empty {
+  display: none;
+}
+
+.leaderboard {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 440;
+  width: min(210px, calc(100% - 28px));
+  max-height: min(60vh, calc(100% - 80px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid rgb(221 238 234 / 35%);
+  border-radius: 10px;
+  background: rgb(18 29 34 / 92%);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 30%);
+}
+
+.leaderboard[hidden] {
+  display: none;
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.leaderboard h2 {
+  font-size: 0.82rem;
+}
+
+.leaderboard-collapse {
+  min-width: 24px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 22px 70px 64px 10px;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 18px;
+  font-size: 0.74rem;
+}
+
+.leaderboard-list {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leaderboard-place {
+  color: #a9b8ba;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.leaderboard-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-time {
+  overflow: hidden;
+  color: #a9b8ba;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.leaderboard-color {
+  justify-self: end;
+}
+
+.leaderboard-empty {
+  margin: 9px 0 0;
+  color: #a9b8ba;
+  font-size: 0.72rem;
+}
+
+.leaderboard-empty[hidden] {
   display: none;
 }
 

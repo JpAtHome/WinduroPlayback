@@ -17,6 +17,23 @@
     <main class="app">
       <section class="map-area" aria-label="Race map">
         <div id="map" role="application" aria-label="Interactive map showing Winduro participant tracks"></div>
+        <aside id="leaderboard" class="leaderboard" aria-labelledby="leaderboard-heading" hidden>
+          <div class="leaderboard-header">
+            <h2 id="leaderboard-heading">Leaderboard</h2>
+            <button
+              id="leaderboard-collapse"
+              class="secondary leaderboard-collapse"
+              type="button"
+              aria-label="Expand leaderboard"
+              aria-expanded="false"
+              aria-controls="leaderboard-content"
+            >+</button>
+          </div>
+          <div id="leaderboard-content" hidden>
+            <ol id="leaderboard-list" class="leaderboard-list"></ol>
+            <p id="leaderboard-empty" class="leaderboard-empty" hidden>No visible participants.</p>
+          </div>
+        </aside>
         <div id="status" class="status" role="status" aria-live="polite">Loading race tracks…</div>
       </section>
 

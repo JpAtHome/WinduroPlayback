@@ -56,6 +56,11 @@ const ui = {
   reset: document.querySelector("#reset"),
   showFullTrack: document.querySelector("#show-full-track"),
   pinNames: document.querySelector("#pin-names"),
+  leaderboard: document.querySelector("#leaderboard"),
+  leaderboardCollapse: document.querySelector("#leaderboard-collapse"),
+  leaderboardContent: document.querySelector("#leaderboard-content"),
+  leaderboardList: document.querySelector("#leaderboard-list"),
+  leaderboardEmpty: document.querySelector("#leaderboard-empty"),
   gpsSpikeCorrection: document.querySelector("#gps-spike-correction"),
   seek: document.querySelector("#seek"),
   speed: document.querySelector("#speed"),
@@ -84,6 +89,8 @@ let frameId = 0;
 let lastFrameAt = null;
 let lastClockSecond = null;
 let lastClockMode = null;
+let lastLeaderboardSignature = null;
+let triangulationContext = null;
 let syncLine = null;
 let defaultSyncLine = null;
 let shareStateReady = false;
@@ -111,6 +118,29 @@ function formatRelativeTime(seconds) {
 
 function formatClock(epochSeconds) {
   return clockFormatter.format(new Date(epochSeconds * 1000));
+}
+
+function participantDotBackground(track) {
+  return track.secondaryColor
+    ? `linear-gradient(135deg, ${track.color} 50%, ${track.secondaryColor} 50%)`
+    : track.color;
+}
+
+function participantDotBorderColor(track) {
+  return track.color === "#ffffff" ? "#26383c" : "#ffffff";
+}
+
+function participantMarkerIcon(track) {
+  const dot = document.createElement("span");
+  dot.className = "participant-map-dot";
+  dot.style.background = participantDotBackground(track);
+  dot.style.borderColor = participantDotBorderColor(track);
+  return L.divIcon({
+    className: "participant-marker-icon",
+    html: dot,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+  });
 }
 
 function distanceMeters(first, second) {
@@ -378,6 +408,61 @@ async function loadTrackManifest() {
     };
   });
   return { tracks: definitions, syncLine: parsedSyncLine };
+}
+
+function createTwoCenterContext(points, line) {
+  let latitudeTotal = 0;
+  let longitudeTotal = 0;
+  for (const point of points) {
+    latitudeTotal += point.lat;
+    longitudeTotal += point.lon;
+  }
+  const origin = {
+    lat: latitudeTotal / points.length,
+    lon: longitudeTotal / points.length,
+  };
+  const metersPerLongitude = 111_320 * Math.cos((origin.lat * Math.PI) / 180);
+  let centerX = 0;
+  let centerY = 0;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const point of points) {
+    const x = (point.lon - origin.lon) * metersPerLongitude;
+    const y = (point.lat - origin.lat) * 111_132;
+    centerX += x;
+    centerY += y;
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+  }
+  centerX /= points.length;
+  centerY /= points.length;
+  const quarterSpan = (maxY - minY) / 4;
+  const centers = [
+    { x: centerX, y: centerY - quarterSpan },
+    { x: centerX, y: centerY + quarterSpan },
+  ];
+  const gateCenter = {
+    x: ((line.start.lon + line.end.lon) / 2 - origin.lon) * metersPerLongitude,
+    y: ((line.start.lat + line.end.lat) / 2 - origin.lat) * 111_132,
+  };
+  return {
+    origin,
+    metersPerLongitude,
+    centers: centers.map((point) => ({
+      ...point,
+      startAngle: Math.atan2(gateCenter.y - point.y, gateCenter.x - point.x),
+    })),
+  };
+}
+
+function getTwoCenterProgress(position, context) {
+  const x = (position.lon - context.origin.lon) * context.metersPerLongitude;
+  const y = (position.lat - context.origin.lat) * 111_132;
+  const angularProgress = (center) => {
+    const angle = Math.atan2(y - center.y, x - center.x) - center.startAngle;
+    return ((angle / (2 * Math.PI)) % 1 + 1) % 1;
+  };
+  return (angularProgress(context.centers[0]) + angularProgress(context.centers[1])) / 2;
 }
 
 function copySyncLine(line) {
@@ -867,7 +952,7 @@ function trackCard(track) {
   card.innerHTML = `
     <div class="track-name">
       <input class="track-visibility" type="checkbox" checked>
-      <span class="swatch"></span>
+      <span class="swatch participant-color-dot"></span>
       <span class="track-label"></span>
       <span class="track-discipline-badge"></span>
       <span class="track-completion" title="Completion duration"></span>
@@ -879,16 +964,12 @@ function trackCard(track) {
     </div>
   `;
   const swatch = card.querySelector(".swatch");
-  if (track.color === "#ffffff") swatch.classList.add("swatch-light");
-  if (track.secondaryColor) {
-    swatch.classList.add("swatch-pair");
-    swatch.style.background = `linear-gradient(90deg, ${track.color} 50%, ${track.secondaryColor} 50%)`;
-  } else {
-    swatch.style.background = track.color;
-  }
+  swatch.style.background = participantDotBackground(track);
+  swatch.style.borderColor = participantDotBorderColor(track);
   card.querySelector(".track-label").textContent = track.name;
   const disciplineBadge = card.querySelector(".track-discipline-badge");
   disciplineBadge.textContent = track.discipline;
+  disciplineBadge.dataset.discipline = track.discipline;
   disciplineBadge.setAttribute("aria-label", `Discipline: ${track.discipline}`);
   track.cardCompletion = card.querySelector(".track-completion");
   track.cardGear = card.querySelector(".track-gear");
@@ -1056,8 +1137,7 @@ function rebuildTrackPolyline(track, index, position) {
 }
 
 function setMarkerVisible(track, visible) {
-  const opacity = visible ? 1 : 0;
-  track.marker.setStyle({ opacity, fillOpacity: opacity });
+  track.marker.setOpacity(visible ? 1 : 0);
 }
 
 function setLayerVisibility(layer, visible) {
@@ -1118,7 +1198,135 @@ function findPosition(track, time) {
   };
 }
 
+function createLeaderboardRow(track) {
+  const row = document.createElement("li");
+  row.className = "leaderboard-row";
+  row.dataset.participant = track.name;
+  const place = document.createElement("span");
+  place.className = "leaderboard-place";
+  const name = document.createElement("span");
+  name.className = "leaderboard-name";
+  name.textContent = track.name;
+  const completion = document.createElement("span");
+  completion.className = "leaderboard-time";
+  const color = document.createElement("span");
+  color.className = "participant-color-dot leaderboard-color";
+  color.setAttribute("aria-hidden", "true");
+  color.style.background = participantDotBackground(track);
+  color.style.borderColor = participantDotBorderColor(track);
+  row.append(place, name, completion, color);
+  return row;
+}
+
+function animateLeaderboardRows(rows, previousPositions) {
+  if (
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  ) {
+    return;
+  }
+
+  for (const row of rows) {
+    const previousTop = previousPositions.get(row);
+    if (previousTop === undefined || typeof row.animate !== "function") continue;
+    const offset = previousTop - row.getBoundingClientRect().top;
+    if (Math.abs(offset) < 1) continue;
+    row.animate(
+      [{ transform: `translateY(${offset}px)` }, { transform: "translateY(0)" }],
+      { duration: 220, easing: "ease-out" },
+    );
+  }
+}
+
+function setLeaderboardCollapsed(collapsed) {
+  ui.leaderboardContent.hidden = collapsed;
+  ui.leaderboardCollapse.setAttribute("aria-expanded", String(!collapsed));
+  ui.leaderboardCollapse.setAttribute(
+    "aria-label",
+    `${collapsed ? "Expand" : "Collapse"} leaderboard`,
+  );
+  ui.leaderboardCollapse.textContent = collapsed ? "+" : "-";
+}
+
+function updateLeaderboard(positionStates) {
+  const entries = positionStates
+    .map(({ track, state }) => {
+      const finishTime =
+        mode === "relative"
+          ? track.completionTime - track.absoluteStart - track.syncElapsed
+          : track.completionTime;
+      const raceStartTime = mode === "relative" ? 0 : track.completionStartTime;
+      return {
+        track,
+        progress:
+          currentTime < raceStartTime
+            ? 0
+            : getTwoCenterProgress(state.position, triangulationContext),
+        finished: currentTime >= finishTime,
+      };
+    });
+
+  const compareFinishers = (first, second) =>
+    first.track.completionDuration - second.track.completionDuration ||
+    first.track.order - second.track.order;
+  const compareProgress = (first, second) => {
+    if (first.finished !== second.finished) return first.finished ? -1 : 1;
+    if (first.finished) return compareFinishers(first, second);
+    return second.progress - first.progress || first.track.order - second.track.order;
+  };
+  const ranking = [...entries].sort(
+    mode === "absolute"
+      ? compareFinishers
+      : compareProgress,
+  );
+
+  const wasHidden = ui.leaderboard.hidden;
+  ui.leaderboard.hidden = false;
+  const signature = JSON.stringify(
+    ranking.map(({ track, finished }) => [track.name, finished]),
+  );
+  if (signature === lastLeaderboardSignature) return;
+  lastLeaderboardSignature = signature;
+
+  const existingRows = new Map(
+    Array.from(ui.leaderboardList.children, (row) => [row.dataset.participant, row]),
+  );
+  const previousPositions = new Map();
+  if (!wasHidden && !ui.leaderboardContent.hidden) {
+    for (const row of existingRows.values()) {
+      previousPositions.set(row, row.getBoundingClientRect().top);
+    }
+  }
+  for (const row of existingRows.values()) {
+    for (const animation of row.getAnimations?.() ?? []) animation.cancel();
+  }
+
+  const rows = ranking.map(({ track, finished }, index) => {
+    const row = existingRows.get(track.name) ?? createLeaderboardRow(track);
+    const place = row.querySelector(".leaderboard-place");
+    place.textContent = String(index + 1);
+    place.setAttribute(
+      "aria-label",
+      `${mode === "absolute" ? "Completion result" : "Two-center angle"} rank ${index + 1}`,
+    );
+    const completion = row.querySelector(".leaderboard-time");
+    completion.textContent = finished
+      ? `${track.approximate ? "* " : ""}${formatDuration(track.completionDuration)}`
+      : "";
+    completion.title = finished
+      ? `${track.approximate ? "Estimated " : ""}elapsed time to ${
+          Number.isFinite(track.finishElapsed) ? "finish-line crossing" : "end of recorded track"
+        }.`
+      : "";
+    return row;
+  });
+  ui.leaderboardList.replaceChildren(...rows);
+  ui.leaderboardEmpty.hidden = ranking.length > 0;
+  animateLeaderboardRows(rows, previousPositions);
+}
+
 function updateMap(force = false) {
+  const positionStates = [];
   for (const track of tracks) {
     if (!track.visible || !track.timingReady || track.error) {
       setMarkerVisible(track, false);
@@ -1131,6 +1339,7 @@ function updateMap(force = false) {
       track.progressLine.setLatLngs([]);
       continue;
     }
+    positionStates.push({ track, state });
     track.marker.setLatLng([state.position.lat, state.position.lon]);
     setMarkerVisible(track, true);
     if (!state.started) {
@@ -1143,6 +1352,7 @@ function updateMap(force = false) {
       track.lastIndex = state.index;
     }
   }
+  updateLeaderboard(positionStates);
 }
 
 function updateClock(force = false) {
@@ -1292,15 +1502,11 @@ async function loadTrack(definition) {
     weight: 3.5,
     renderer: L.canvas(),
   }).addTo(map);
-  track.marker = L.circleMarker([0, 0], {
+  track.marker = L.marker([0, 0], {
     pane: "markerPane",
-    radius: 7,
-    color: track.secondaryColor || (track.color === "#ffffff" ? "#26383c" : "#ffffff"),
-    weight: track.secondaryColor ? 3 : 2,
-    fillColor: track.color,
-    fillOpacity: 1,
+    icon: participantMarkerIcon(track),
     opacity: 0,
-    renderer: markerRenderer,
+    keyboard: false,
   }).addTo(map);
   try {
     const response = await fetch(new URL(definition.file, TRACK_MANIFEST_URL));
@@ -1402,6 +1608,9 @@ ui.showFullTrack.addEventListener("change", () => {
 ui.pinNames.addEventListener("change", () => {
   for (const track of tracks) setTrackNamePinned(track, ui.pinNames.checked);
 });
+ui.leaderboardCollapse.addEventListener("click", () => {
+  setLeaderboardCollapsed(ui.leaderboardCollapse.getAttribute("aria-expanded") === "true");
+});
 ui.gpsSpikeCorrection.addEventListener("change", () => {
   pause();
   for (const track of tracks) {
@@ -1442,7 +1651,13 @@ async function initialize() {
     defaultSyncLine = copySyncLine(manifest.syncLine);
     const definitions = manifest.tracks;
     ui.trackCount.textContent = String(definitions.length);
-    await Promise.all(definitions.map(loadTrack));
+    await Promise.all(definitions.map((definition) => loadTrack(definition)));
+    const coursePoints = tracks
+      .filter((track) => !track.error && track.points.length > 0)
+      .flatMap((track) => track.points);
+    if (coursePoints.length > 0) {
+      triangulationContext = createTwoCenterContext(coursePoints, defaultSyncLine);
+    }
     for (const track of tracks) calculateTrackCompletion(track, defaultSyncLine);
     sortParticipantList();
     ui.toggleTrackDetails.disabled = false;

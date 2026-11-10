@@ -18,7 +18,8 @@ Open [http://localhost:8000](http://localhost:8000). Press `Ctrl+C` in the termi
 
 - Choose **Absolute** to follow event clock time or **Relative** to align riders at the sync-line crossing.
 - Use **Play**, **Reset**, the race-position slider, and playback-speed control to navigate the race. Pan and zoom the map to inspect the course.
-- Expand **Advanced settings** to show full routes, hold position through detected GPS dropouts, or draw and adjust the relative-time sync line.
+- The map leaderboard starts collapsed. It shows fixed completion-time order in **Absolute** mode and live counterclockwise two-center angle ranking in **Relative** mode, including checked participants; use its top-right button to expand or collapse the list.
+- Expand **Advanced settings** to pin names, show full routes, hold position through detected GPS dropouts, or draw and adjust the relative-time sync line.
 - Select participants in the list to show or hide their tracks. Use **Show all details** to view gear, start and finish times, and timing information for every participant.
 
 ## Track timing
