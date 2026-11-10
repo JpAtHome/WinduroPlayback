@@ -375,6 +375,16 @@ button:disabled {
   border-radius: 50%;
 }
 
+.swatch-light {
+  border: 1px solid #53656a;
+}
+
+.swatch-pair {
+  width: 15px;
+  border: 1px solid #53656a;
+  border-radius: 3px;
+}
+
 .track-detail {
   display: grid;
   gap: 4px;

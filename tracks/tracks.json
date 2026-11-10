@@ -7,34 +7,54 @@
     {
       "name": "Dan O",
       "file": "Dan_O.gpx",
-      "gear": "Kona longboard and 6.3"
+      "gear": "Kona longboard and 6.3",
+      "color": "#ff00a3"
     },
     {
       "name": "Eric H",
       "file": "Eric_H.gpx",
-      "gear": "Windsurfer LT and 5.7"
+      "gear": "Windsurfer LT and 5.7",
+      "color": "#234e70"
     },
     {
       "name": "James K",
       "file": "james_k.gpx",
-      "gear": "Mistral One Design and 5.8"
+      "gear": "Mistral One Design and 5.8",
+      "color": "#ff7297"
     },
     {
       "name": "Jon P",
       "file": "Jon_P.gpx",
-      "gear": "Raceboard and 9.6"
+      "gear": "Raceboard and 9.6",
+      "color": "#f5d400",
+      "secondaryColor": "#e53935"
     },
     {
       "name": "Troy V",
       "file": "Troy_V.gpx",
-      "gear": "Formula board and 8.5"
+      "gear": "Formula board and 8.5",
+      "color": "#00c853",
+      "secondaryColor": "#e53935"
     },
     {
       "name": "Nikolay B",
       "file": "Nikolay_B.gpx",
       "gear": "Windfoil and 7.0",
+      "color": "#f04444",
+      "secondaryColor": "#009bf5",
       "startTime": "2026-11-08T09:27:00-08:00",
       "durationSeconds": 5946
+    },
+    {
+      "name": "Dean P",
+      "file": "Dean P.gpx",
+      "color": "#ffffff"
+    },
+    {
+      "name": "Greg M",
+      "file": "Greg_M.gpx",
+      "color": "#d62828",
+      "secondaryColor": "#ffffff"
     }
   ]
 }

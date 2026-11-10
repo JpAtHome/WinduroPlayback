@@ -25,7 +25,7 @@ Open [http://localhost:8000](http://localhost:8000). Press `Ctrl+C` in the termi
 
 Tracks with timestamps use their recorded times. For tracks without point timestamps, start time and duration are used to estimate positions between recorded points. This timing is approximate and cannot reproduce exact pauses or synchronization.
 
-The event manifest is `tracks/tracks.json`; it contains participant details, gear, timing estimates, and the default sync line. **Timing for untimed tracks is estimated.**
+The event manifest is `tracks/tracks.json`; it contains participant details, gear, timing estimates, track colors, and the default sync line. Set `color` and optional `secondaryColor` to six-digit hex values; secondary colors appear in participant swatches and marker outlines, while routes stay in the primary color. **Timing for untimed tracks is estimated.**
 
 ## Map and data
 

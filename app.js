@@ -1,5 +1,26 @@
 const TRACK_MANIFEST_URL = new URL("./tracks/tracks.json", document.baseURI);
-const TRACK_COLORS = ["#59d5ff", "#ffcb5b", "#ff7297", "#9d8aff", "#7ee089"];
+const TRACK_COLORS = [
+  "#59d5ff",
+  "#ffcb5b",
+  "#ff7297",
+  "#9d8aff",
+  "#7ee089",
+  "#ff9864",
+  "#f500f5",
+  "#00f500",
+  "#f53100",
+  "#b4da1b",
+  "#f500a3",
+  "#1bdac7",
+  "#009bf5",
+  "#ff2954",
+  "#ed6eed",
+  "#00f572",
+  "#9d5cff",
+  "#f58b00",
+  "#f5d400",
+  "#6eda1b",
+];
 
 const TILE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -230,6 +251,7 @@ async function loadTrackManifest() {
 
   const files = new Set();
   const names = new Set();
+  const colors = new Set();
   const definitions = manifest.tracks.map((entry, index) => {
     if (!entry || typeof entry.name !== "string" || !entry.name.trim()) {
       throw new Error(`Track ${index + 1} needs a non-empty name in tracks/tracks.json.`);
@@ -255,6 +277,30 @@ async function loadTrackManifest() {
       throw new Error(`${entry.name} gear must be a non-empty string in tracks/tracks.json.`);
     }
 
+    const hasColor = entry.color !== undefined && entry.color !== null;
+    if (hasColor && (typeof entry.color !== "string" || !/^#[\da-f]{6}$/i.test(entry.color))) {
+      throw new Error(`${entry.name} color must be a six-digit hex color in tracks/tracks.json.`);
+    }
+    const color = (hasColor ? entry.color : TRACK_COLORS[index])?.toLowerCase();
+    if (!color) {
+      throw new Error(`Add a unique color to ${entry.name} or extend the track color palette in app.js.`);
+    }
+    if (colors.has(color)) {
+      throw new Error(`Track colors must be unique; check ${entry.name} in tracks/tracks.json.`);
+    }
+    colors.add(color);
+    const hasSecondaryColor = entry.secondaryColor !== undefined && entry.secondaryColor !== null;
+    if (
+      hasSecondaryColor &&
+      (typeof entry.secondaryColor !== "string" || !/^#[\da-f]{6}$/i.test(entry.secondaryColor))
+    ) {
+      throw new Error(`${entry.name} secondaryColor must be a six-digit hex color in tracks/tracks.json.`);
+    }
+    const secondaryColor = hasSecondaryColor ? entry.secondaryColor.toLowerCase() : null;
+    if (secondaryColor === color) {
+      throw new Error(`${entry.name} color and secondaryColor must be different.`);
+    }
+
     const hasStartTime = entry.startTime !== undefined && entry.startTime !== null;
     const hasDuration = entry.durationSeconds !== undefined && entry.durationSeconds !== null;
     if (hasStartTime !== hasDuration) {
@@ -278,7 +324,8 @@ async function loadTrackManifest() {
       gear: hasGear ? entry.gear.trim() : null,
       startTime: hasStartTime ? entry.startTime : null,
       durationSeconds: hasDuration ? entry.durationSeconds : null,
-      color: TRACK_COLORS[index % TRACK_COLORS.length],
+      color,
+      secondaryColor,
     };
   });
   return { tracks: definitions, syncLine: parsedSyncLine };
@@ -584,7 +631,7 @@ function trackCard(track) {
   card.innerHTML = `
     <div class="track-name">
       <input class="track-visibility" type="checkbox" checked>
-      <span class="swatch" style="background:${track.color}"></span>
+      <span class="swatch"></span>
       <span class="track-label"></span>
       <span class="track-timing-badge" hidden></span>
       <span class="track-completion" title="Completion duration"></span>
@@ -595,6 +642,14 @@ function trackCard(track) {
       <p class="track-metadata"></p>
     </div>
   `;
+  const swatch = card.querySelector(".swatch");
+  if (track.color === "#ffffff") swatch.classList.add("swatch-light");
+  if (track.secondaryColor) {
+    swatch.classList.add("swatch-pair");
+    swatch.style.background = `linear-gradient(90deg, ${track.color} 50%, ${track.secondaryColor} 50%)`;
+  } else {
+    swatch.style.background = track.color;
+  }
   card.querySelector(".track-label").textContent = track.name;
   track.cardTimingBadge = card.querySelector(".track-timing-badge");
   track.cardCompletion = card.querySelector(".track-completion");
@@ -958,8 +1013,8 @@ async function loadTrack(definition) {
   track.marker = L.circleMarker([0, 0], {
     pane: "markerPane",
     radius: 7,
-    color: "#ffffff",
-    weight: 2,
+    color: track.secondaryColor || (track.color === "#ffffff" ? "#26383c" : "#ffffff"),
+    weight: track.secondaryColor ? 3 : 2,
     fillColor: track.color,
     fillOpacity: 1,
     opacity: 0,
