@@ -1,12 +1,12 @@
 const TRACK_MANIFEST_URL = new URL("./tracks/tracks.json", document.baseURI);
-const TRACK_COLORS = ["#59d5ff", "#ffcb5b", "#ff7297", "#9d8aff", "#7ee089", "#ff9864"];
+const TRACK_COLORS = ["#59d5ff", "#ffcb5b", "#ff7297", "#9d8aff", "#7ee089"];
 
 const TILE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 const TILE_ATTRIBUTION =
   "Tiles &copy; Esri — Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community";
 const EARTH_RADIUS_METERS = 6_371_000;
-const GPS_SPIKE_MAX_SPEED_METERS_PER_SECOND = 60;
+const GPS_SPIKE_MAX_SPEED_METERS_PER_SECOND = 30;
 const GPS_SPIKE_RETURN_DISTANCE_METERS = 100;
 const GPS_SPIKE_MIN_EXCURSION_METERS = 500;
 const GPS_SPIKE_LOOKAHEAD_POINTS = 60;
@@ -586,6 +586,7 @@ function trackCard(track) {
       <input class="track-visibility" type="checkbox" checked>
       <span class="swatch" style="background:${track.color}"></span>
       <span class="track-label"></span>
+      <span class="track-timing-badge" hidden></span>
       <span class="track-completion" title="Completion duration"></span>
     </div>
     <div class="track-detail" hidden>
@@ -595,6 +596,7 @@ function trackCard(track) {
     </div>
   `;
   card.querySelector(".track-label").textContent = track.name;
+  track.cardTimingBadge = card.querySelector(".track-timing-badge");
   track.cardCompletion = card.querySelector(".track-completion");
   track.cardGear = card.querySelector(".track-gear");
   track.cardTimes = card.querySelector(".track-times");
@@ -644,6 +646,12 @@ function gpsHoldNote(track) {
 
 function setTrackTimes(track) {
   if (track.error) return;
+  track.card.classList.toggle("track-card-estimated", Boolean(track.approximate));
+  track.cardTimingBadge.hidden = !track.approximate;
+  if (track.approximate) {
+    track.cardTimingBadge.textContent = "ESTIMATED TIME";
+    track.cardTimingBadge.title = "Track timing is estimated from the start time and duration, not recorded GPX timestamps.";
+  }
   if (track.hasTimestamps) {
     track.absoluteStart = track.points[0].timestamp;
     track.absoluteEnd = track.points[track.points.length - 1].timestamp;
@@ -661,7 +669,7 @@ function setTrackTimes(track) {
   track.cardGear.textContent = track.gear ? `Gear: ${track.gear}` : "Gear: not provided";
   if (track.timingReady) {
     const duration = track.absoluteEnd - track.absoluteStart;
-    track.cardCompletion.textContent = `${track.approximate ? "~ " : ""}${formatDuration(duration)}`;
+    track.cardCompletion.textContent = `${track.approximate ? "* " : ""}${formatDuration(duration)}`;
     track.cardCompletion.title = track.approximate
       ? "Estimated completion duration"
       : "Recorded completion duration";
