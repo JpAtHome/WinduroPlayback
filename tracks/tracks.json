@@ -6,24 +6,28 @@
   "tracks": [
     {
       "name": "Dan O",
+      "discipline": "Windsurf",
       "file": "Dan_O.gpx",
       "gear": "Kona longboard and 6.3",
       "color": "#ff00a3"
     },
     {
       "name": "Eric H",
+      "discipline": "Windsurf",
       "file": "Eric_H.gpx",
       "gear": "Windsurfer LT and 5.7",
       "color": "#234e70"
     },
     {
       "name": "James K",
+      "discipline": "Windsurf",
       "file": "james_k.gpx",
       "gear": "Mistral One Design and 5.8",
       "color": "#ff7297"
     },
     {
       "name": "Jon P",
+      "discipline": "Windsurf",
       "file": "Jon_P.gpx",
       "gear": "Raceboard and 9.6",
       "color": "#f5d400",
@@ -31,6 +35,7 @@
     },
     {
       "name": "John McC",
+      "discipline": "Windsurf",
       "file": "John_McC.gpx",
       "gear": "Mistral Superlight 2 and 7.6",
       "color": "#e36a2d",
@@ -38,6 +43,7 @@
     },
     {
       "name": "Troy V",
+      "discipline": "Windsurf",
       "file": "Troy_V.gpx",
       "gear": "Formula board and 8.5",
       "color": "#00c853",
@@ -45,6 +51,7 @@
     },
     {
       "name": "Nikolay B",
+      "discipline": "Windfoil",
       "file": "Nikolay_B.gpx",
       "gear": "Windfoil and 7.0",
       "color": "#f04444",
@@ -56,24 +63,28 @@
     },
     {
       "name": "Dean P",
+      "discipline": "Windfoil",
       "file": "Dean P.gpx",
       "gear": "135L JP windsurf foil board and 7.8m ePace",
       "color": "#ffffff"
     },
     {
       "name": "Greg M",
+      "discipline": "Windsurf",
       "file": "Greg_M.gpx",
       "color": "#d62828",
       "secondaryColor": "#ffffff"
     },
     {
       "name": "Plamen P",
+      "discipline": "Windfoil",
       "file": "Plamen_P.gpx",
       "gear": "Starboard IQ foil board and 1000/115++/255 and 7.0",
       "color": "#1bdac7"
     },
     {
       "name": "Sevena S",
+      "discipline": "Windsurf",
       "file": "Sevena_S.gpx",
       "gear": "Windsurfer LT and 6.3 Goya Bonzai",
       "color": "#d1da12",
@@ -82,24 +93,28 @@
     },
     {
       "name": "Thomas M",
+      "discipline": "Windsurf",
       "file": "Thomas_M.gpx",
       "gear": "200L Lambada Bic, Sailworks Retro 8.5",
       "color": "#0576c6"
     },
     {
       "name": "Christian F",
+      "discipline": "Wingfoil",
       "file": "Christian_F.gpx",
       "gear": "105 inflatable wingfoil downwind board, 5.5 wing, and 900cm2 13ar foil",
       "color": "#32cd32"
     },
     {
       "name": "Montana H",
+      "discipline": "Windsurf",
       "file": "Montana_H.gpx",
       "gear": "Mistral Superlight and Sailworks Retro 8.0",
       "color": "#ff8c00"
     },
     {
       "name": "Stefan K",
+      "discipline": "Windsurf",
       "file": "Stefan_K.gpx",
       "gear": "1994 F2 Lightning World Cap Race, 8.5 Neil Pryde V8",
       "color": "#4169e1",

@@ -208,6 +208,22 @@ select {
   background-size: 8px 8px;
 }
 
+.leaflet-tooltip.participant-name-tooltip {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #10191e, 0 0 4px #10191e;
+}
+
+.leaflet-tooltip.participant-name-tooltip::before {
+  display: none;
+}
+
 
 
 button {
@@ -302,6 +318,30 @@ button:disabled {
   font-size: 0.68rem;
 }
 
+.discipline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.discipline-filter {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 5px 8px;
+  font-size: 0.68rem;
+}
+
+.discipline-filter[aria-pressed="true"] {
+  border-color: #68d0aa;
+  background: #203a32;
+  color: #d9fff0;
+}
+
+.discipline-filter[aria-pressed="false"] {
+  color: #a9b8ba;
+}
+
 .count {
   display: grid;
   width: 22px;
@@ -349,16 +389,16 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
-.track-timing-badge {
+.track-discipline-badge {
   flex: 0 0 auto;
   padding: 2px 5px;
-  border: 1px solid #9a7134;
-  border-radius: 4px;
-  background: #332918;
-  color: #ffd58a;
+  border: 1px solid #43565b;
+  border-radius: 999px;
+  background: #20343a;
+  color: #c7d9dc;
   font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .track-completion {

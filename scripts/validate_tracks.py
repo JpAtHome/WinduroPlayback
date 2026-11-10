@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TRACKS_DIR = ROOT / "tracks"
 MANIFEST_PATH = TRACKS_DIR / "tracks.json"
 COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
+DISCIPLINES = {"Windsurf", "Windfoil", "Wingfoil"}
 EARTH_RADIUS_METERS = 6_371_000
 
 
@@ -173,6 +174,10 @@ def validate():
             if name_key in names:
                 errors.append(f"{label}: participant names must be unique.")
             names.add(name_key)
+
+        discipline = track.get("discipline")
+        if not isinstance(discipline, str) or discipline not in DISCIPLINES:
+            errors.append(f"{label}: discipline is required and must be Windsurf, Windfoil, or Wingfoil.")
 
         filename = track.get("file")
         if isinstance(filename, str):

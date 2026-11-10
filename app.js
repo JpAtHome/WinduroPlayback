@@ -21,6 +21,7 @@ const TRACK_COLORS = [
   "#f5d400",
   "#6eda1b",
 ];
+const DISCIPLINES = ["Windsurf", "Windfoil", "Wingfoil"];
 
 const TILE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -54,6 +55,7 @@ const ui = {
   play: document.querySelector("#play-toggle"),
   reset: document.querySelector("#reset"),
   showFullTrack: document.querySelector("#show-full-track"),
+  pinNames: document.querySelector("#pin-names"),
   gpsSpikeCorrection: document.querySelector("#gps-spike-correction"),
   seek: document.querySelector("#seek"),
   speed: document.querySelector("#speed"),
@@ -67,6 +69,7 @@ const ui = {
   status: document.querySelector("#status"),
   trackCount: document.querySelector("#track-count"),
   toggleTrackDetails: document.querySelector("#toggle-track-details"),
+  disciplineFilters: document.querySelector("#discipline-filters"),
   trackList: document.querySelector("#track-list"),
 };
 
@@ -281,6 +284,11 @@ async function loadTrackManifest() {
     if (hasGear && (typeof entry.gear !== "string" || !entry.gear.trim())) {
       throw new Error(`${entry.name} gear must be a non-empty string in tracks/tracks.json.`);
     }
+    if (!DISCIPLINES.includes(entry.discipline)) {
+      throw new Error(
+        `${entry.name} discipline must be Windsurf, Windfoil, or Wingfoil in tracks/tracks.json.`,
+      );
+    }
 
     // Keep rendering resilient; CI separately requires explicit colors in the manifest.
     const hasColor = entry.color !== undefined && entry.color !== null;
@@ -361,6 +369,7 @@ async function loadTrackManifest() {
     return {
       name: entry.name.trim(),
       file: entry.file,
+      discipline: entry.discipline,
       gear: hasGear ? entry.gear.trim() : null,
       startTime: hasStartTime ? entry.startTime : null,
       timing,
@@ -860,7 +869,7 @@ function trackCard(track) {
       <input class="track-visibility" type="checkbox" checked>
       <span class="swatch"></span>
       <span class="track-label"></span>
-      <span class="track-timing-badge" hidden></span>
+      <span class="track-discipline-badge"></span>
       <span class="track-completion" title="Completion duration"></span>
     </div>
     <div class="track-detail" hidden>
@@ -878,7 +887,9 @@ function trackCard(track) {
     swatch.style.background = track.color;
   }
   card.querySelector(".track-label").textContent = track.name;
-  track.cardTimingBadge = card.querySelector(".track-timing-badge");
+  const disciplineBadge = card.querySelector(".track-discipline-badge");
+  disciplineBadge.textContent = track.discipline;
+  disciplineBadge.setAttribute("aria-label", `Discipline: ${track.discipline}`);
   track.cardCompletion = card.querySelector(".track-completion");
   track.cardGear = card.querySelector(".track-gear");
   track.cardTimes = card.querySelector(".track-times");
@@ -888,6 +899,7 @@ function trackCard(track) {
   visibility.addEventListener("change", () => {
     track.visible = visibility.checked;
     syncTrackVisibility(track);
+    updateDisciplineFilterButtons();
     fitVisibleTracks();
     refreshTimeline();
     updateShareUrl();
@@ -932,11 +944,6 @@ function gpsHoldNote(track) {
 function setTrackTimes(track) {
   if (track.error) return;
   track.card.classList.toggle("track-card-estimated", Boolean(track.approximate));
-  track.cardTimingBadge.hidden = !track.approximate;
-  if (track.approximate) {
-    track.cardTimingBadge.textContent = "ESTIMATED TIME";
-    track.cardTimingBadge.title = "Track timing is estimated from timing.start and timing.durationSeconds, not recorded GPX timestamps.";
-  }
   if (track.hasTimestamps) {
     if (track.timing) {
       setTrackError(track, `${track.name} timing is only for tracks without GPX timestamps.`);
@@ -1064,6 +1071,17 @@ function syncTrackVisibility(track) {
   setLayerVisibility(track.progressLine, track.visible);
   setLayerVisibility(track.fullLine, track.visible && ui.showFullTrack.checked);
   if (track.visible) updateMap(true);
+}
+
+function setTrackNamePinned(track, pinned) {
+  track.marker.unbindTooltip();
+  track.marker.bindTooltip(track.name, {
+    className: "participant-name-tooltip",
+    direction: "top",
+    offset: [0, -8],
+    opacity: 0.95,
+    permanent: pinned && !track.error && track.points?.length > 0,
+  });
 }
 
 function findPosition(track, time) {
@@ -1284,12 +1302,6 @@ async function loadTrack(definition) {
     opacity: 0,
     renderer: markerRenderer,
   }).addTo(map);
-  track.marker.bindTooltip(track.name, {
-    direction: "top",
-    offset: [0, -8],
-    opacity: 0.95,
-  });
-
   try {
     const response = await fetch(new URL(definition.file, TRACK_MANIFEST_URL));
     if (!response.ok) throw new Error(`Could not load GPX (${response.status} ${response.statusText}).`);
@@ -1302,6 +1314,7 @@ async function loadTrack(definition) {
     track.error = error instanceof Error ? error.message : "Could not load this GPX file.";
     track.points = [];
   }
+  setTrackNamePinned(track, ui.pinNames.checked);
   track.card = trackCard(track);
   if (track.error) setTrackError(track, track.error);
   else setTrackTimes(track);
@@ -1321,6 +1334,36 @@ function sortParticipantList() {
   ui.trackList.replaceChildren(...sortedTracks.map((track) => track.card));
 }
 
+function updateDisciplineFilterButtons() {
+  for (const button of ui.disciplineFilters.querySelectorAll("[data-discipline]")) {
+    const discipline = button.dataset.discipline;
+    const disciplineTracks = tracks.filter((track) => track.discipline === discipline);
+    const allVisible =
+      disciplineTracks.length > 0 && disciplineTracks.every((track) => track.visible);
+    button.disabled = disciplineTracks.length === 0;
+    button.setAttribute("aria-pressed", String(allVisible));
+    button.title = allVisible
+      ? `Hide all ${discipline} participants`
+      : `Show all ${discipline} participants`;
+  }
+}
+
+function toggleDisciplineVisibility(discipline) {
+  const disciplineTracks = tracks.filter((track) => track.discipline === discipline);
+  if (disciplineTracks.length === 0) return;
+
+  const visible = !disciplineTracks.every((track) => track.visible);
+  for (const track of disciplineTracks) {
+    track.visible = visible;
+    track.card.querySelector(".track-visibility").checked = visible;
+    syncTrackVisibility(track);
+  }
+  updateDisciplineFilterButtons();
+  fitVisibleTracks();
+  refreshTimeline();
+  updateShareUrl();
+}
+
 function fitVisibleTracks() {
   const visiblePoints = tracks
     .filter((track) => track.visible && !track.error)
@@ -1332,6 +1375,11 @@ function fitVisibleTracks() {
 
 ui.play.addEventListener("click", startPause);
 ui.drawSyncLine.addEventListener("click", toggleSyncLineDrawing);
+ui.disciplineFilters.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-discipline]");
+  const discipline = button?.dataset.discipline;
+  if (DISCIPLINES.includes(discipline)) toggleDisciplineVisibility(discipline);
+});
 ui.resetSyncLine.addEventListener("click", () => {
   if (!defaultSyncLine || isDefaultSyncLine(syncLine)) return;
   setSyncLine(copySyncLine(defaultSyncLine), true);
@@ -1350,6 +1398,9 @@ ui.showFullTrack.addEventListener("change", () => {
   for (const track of tracks) {
     setLayerVisibility(track.fullLine, track.visible && ui.showFullTrack.checked);
   }
+});
+ui.pinNames.addEventListener("change", () => {
+  for (const track of tracks) setTrackNamePinned(track, ui.pinNames.checked);
 });
 ui.gpsSpikeCorrection.addEventListener("change", () => {
   pause();
@@ -1401,6 +1452,7 @@ async function initialize() {
         track.card.querySelector(".track-visibility").checked = track.visible;
       }
     }
+    updateDisciplineFilterButtons();
     syncLineLayer = L.polyline([], {
       color: "#ffffff",
       opacity: 0.95,

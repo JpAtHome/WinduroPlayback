@@ -49,6 +49,10 @@
               <input id="show-full-track" type="checkbox">
               <span>Show Full track</span>
             </label>
+            <label class="checkbox-row" for="pin-names">
+              <input id="pin-names" type="checkbox" checked>
+              <span>Pin names</span>
+            </label>
             <label class="checkbox-row" for="gps-spike-correction">
               <input id="gps-spike-correction" type="checkbox" checked disabled>
               <span>Hold position through GPS dropouts</span>
@@ -91,6 +95,34 @@
                 disabled
               >Show all details</button>
             </div>
+          </div>
+          <div
+            id="discipline-filters"
+            class="discipline-filters"
+            role="group"
+            aria-label="Toggle participant visibility by discipline"
+          >
+            <button
+              type="button"
+              class="secondary discipline-filter"
+              data-discipline="Windsurf"
+              aria-pressed="true"
+              disabled
+            >Windsurf</button>
+            <button
+              type="button"
+              class="secondary discipline-filter"
+              data-discipline="Windfoil"
+              aria-pressed="true"
+              disabled
+            >Windfoil</button>
+            <button
+              type="button"
+              class="secondary discipline-filter"
+              data-discipline="Wingfoil"
+              aria-pressed="true"
+              disabled
+            >Wingfoil</button>
           </div>
           <div id="track-list" class="track-list"></div>
           <p class="hint timing-footnote">
