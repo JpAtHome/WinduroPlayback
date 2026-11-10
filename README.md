@@ -27,6 +27,10 @@ Tracks with timestamps use their recorded times. For tracks without point timest
 
 The event manifest is `tracks/tracks.json`; it contains participant details, gear, timing estimates, track colors, and the default sync line. Set `color` and optional `secondaryColor` to six-digit hex values; secondary colors appear in participant swatches and marker outlines, while routes stay in the primary color. **Timing for untimed tracks is estimated.**
 
+## Contributing track data
+
+Before opening a PR, run `python scripts/validate_tracks.py`. GitHub Actions runs the same check for every PR. Each participant needs a unique primary `color`; `secondaryColor` is optional. The check also validates manifest fields, timing metadata, GPX coordinates, and timestamps.
+
 ## Map and data
 
 The map uses [Leaflet 1.9.4](https://leafletjs.com/reference-1.9.4.html) and Esri World Imagery. Imagery attribution is shown on the map; review [Esri's World Imagery terms](https://goto.arcgisonline.com/maps/World_Imagery) and [data attribution guidance](https://www.esri.com/en-us/legal/terms/data-attributions).

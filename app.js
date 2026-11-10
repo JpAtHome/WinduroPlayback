@@ -280,6 +280,7 @@ async function loadTrackManifest() {
       throw new Error(`${entry.name} gear must be a non-empty string in tracks/tracks.json.`);
     }
 
+    // Keep rendering resilient; CI separately requires explicit colors in the manifest.
     const hasColor = entry.color !== undefined && entry.color !== null;
     if (hasColor && (typeof entry.color !== "string" || !/^#[\da-f]{6}$/i.test(entry.color))) {
       throw new Error(`${entry.name} color must be a six-digit hex color in tracks/tracks.json.`);
