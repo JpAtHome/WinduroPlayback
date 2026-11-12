@@ -72,6 +72,7 @@
       "name": "Greg M",
       "discipline": "Windsurf",
       "file": "Greg_M.gpx",
+      "gear": "1994 Fanatic Mega Cat 250L raceboard. 2003 Sailworks NX3 - 8.5m 3 batten race sail.",
       "color": "#d62828",
       "secondaryColor": "#ffffff"
     },
@@ -119,6 +120,42 @@
       "gear": "1994 F2 Lightning World Cap Race, 8.5 Neil Pryde V8",
       "color": "#4169e1",
       "secondaryColor": "#d3d3d3"
+    },
+    {
+      "name": "Ryan Z",
+      "discipline": "Wingfoil",
+      "file": "Ryan_Z.gpx",
+      "gear": "80L apple tree midlength. Fone Eagle 890 foil. Unit 4.5 wing.",
+      "color": "#a777e3",
+      "timing": {
+        "start": "2026-11-08T09:45:00-08:00",
+        "durationSeconds": 6500
+      },
+      "startTime": "2026-11-08T17:45:00.000Z"
+    },
+    {
+      "name": "Stasi B",
+      "discipline": "Wingfoil",
+      "file": "Stasi_B.gpx",
+      "gear": "7.3m Ozone Fusion wing",
+      "color": "#ec6a5c",
+      "timing": {
+        "start": "2026-11-08T10:00:00-08:00",
+        "durationSeconds": 4994
+      },
+      "startTime": "2026-11-08T18:00:00.000Z"
+    },
+    {
+      "name": "Dalton B",
+      "discipline": "Wingfoil",
+      "file": "Dalton_B.gpx",
+      "gear": "5.0 Duotone Unit",
+      "color": "#61b8e8",
+      "timing": {
+        "start": "2026-11-08T10:00:00-08:00",
+        "durationSeconds": 5654
+      },
+      "startTime": "2026-11-08T18:00:00.000Z"
     }
   ]
 }

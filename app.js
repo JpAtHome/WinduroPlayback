@@ -1046,10 +1046,10 @@ function setTrackTimes(track) {
   }
   if (track.startTime) {
     const syncTimestamp = Date.parse(track.startTime) / 1000;
-    if (!track.hasTimestamps || syncTimestamp < track.absoluteStart || syncTimestamp > track.absoluteEnd) {
+    if (syncTimestamp < track.absoluteStart || syncTimestamp > track.absoluteEnd) {
       setTrackError(
         track,
-        `${track.name} startTime must be within its recorded GPX timestamps; use timing for estimated tracks.`,
+        `${track.name} startTime must be within its recorded GPX timestamps or supplied timing overrides.`,
       );
       return;
     }

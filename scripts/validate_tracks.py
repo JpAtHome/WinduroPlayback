@@ -3,7 +3,7 @@ import math
 import re
 import sys
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, time, timedelta
 from pathlib import Path
 
 
@@ -116,8 +116,12 @@ def validate_track_file(track, label, timing, has_timing_metadata, start_time, e
         if start_time is not None and not timestamps[0] <= start_time <= timestamps[-1]:
             errors.append(f"{label}: startTime must fall within the GPX timestamp range.")
     elif timed_count == 0:
+        recording_start_time = parse_iso_datetime(timing.get("start"))
         if start_time is not None:
-            errors.append(f"{label}: top-level startTime requires recorded GPX timestamps; put estimated timing under timing.")
+            if start_time < recording_start_time:
+                errors.append(f"{label}: startTime override given is before the recording timing.start.")
+            if start_time >= recording_start_time + timedelta(seconds=timing.get("durationSeconds")):
+                errors.append(f"{label}: startTime override given is not within the timing.duration.")
         if not has_timing_metadata:
             errors.append(f"{label}: {filename} has no point timestamps and needs timing.start and timing.durationSeconds.")
 
@@ -239,7 +243,8 @@ def validate():
                 ):
                     errors.append(f"{label}: timing.durationSeconds must be a positive number.")
 
-        validate_track_file(track, label, timing, has_timing_metadata, start_time, errors)
+        if not errors:
+            validate_track_file(track, label, timing, has_timing_metadata, start_time, errors)
 
     if errors:
         print("Track-data validation failed:")
