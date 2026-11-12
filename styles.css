@@ -417,6 +417,21 @@ button:disabled {
   color: #f3d9a8;
 }
 
+.track-discipline-badge[data-discipline="Formula"] {
+  border-color: #ff2525;
+  background: linear-gradient(145deg, #8b0000, #3b0505);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.45);
+  font-weight: 800;
+}
+
+.track-discipline-badge[data-discipline="Formula"]:hover {
+  background: linear-gradient(145deg, #ff2020, #850000);
+  border-color: #ff5555;
+  box-shadow: 0 0 16px rgba(255, 0, 0, 0.75);
+  transform: scale(1.05);
+}
+
 .track-completion {
   flex: 0 0 auto;
   color: #a9d8c6;

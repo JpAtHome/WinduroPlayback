@@ -43,11 +43,20 @@
     },
     {
       "name": "Troy V",
-      "discipline": "Windsurf",
+      "discipline": "Formula",
       "file": "Troy_V.gpx",
       "gear": "Formula board and 8.5",
       "color": "#00c853",
       "secondaryColor": "#e53935"
+    },
+    {
+      "name": "Maddy F",
+      "discipline": "Windsurf",
+      "file": "Maddy_F.gpx",
+      "gear": "Fanatic Bat and 5.2 Ezzy Legacy",
+      "color": "#7AB362",
+      "secondaryColor": "#CBE018",
+      "startTime": "2026-11-08T17:25:53.000Z"
     },
     {
       "name": "Nikolay B",

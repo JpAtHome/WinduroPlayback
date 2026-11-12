@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TRACKS_DIR = ROOT / "tracks"
 MANIFEST_PATH = TRACKS_DIR / "tracks.json"
 COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
-DISCIPLINES = {"Windsurf", "Windfoil", "Wingfoil"}
+DISCIPLINES = {"Windsurf", "Windfoil", "Wingfoil", "Formula"}
 EARTH_RADIUS_METERS = 6_371_000
 
 
@@ -114,7 +114,7 @@ def validate_track_file(track, label, timing, has_timing_metadata, start_time, e
         if timestamps[-1] <= timestamps[0]:
             errors.append(f"{label}: {filename} timestamps must span a positive duration.")
         if start_time is not None and not timestamps[0] <= start_time <= timestamps[-1]:
-            errors.append(f"{label}: startTime must fall within the GPX timestamp range.")
+            errors.append(f"{label}: startTime must fall within the GPX timestamp range: {timestamps[0]} to {timestamps[-1]}.")
     elif timed_count == 0:
         recording_start_time = parse_iso_datetime(timing.get("start"))
         if start_time is not None:
@@ -181,7 +181,7 @@ def validate():
 
         discipline = track.get("discipline")
         if not isinstance(discipline, str) or discipline not in DISCIPLINES:
-            errors.append(f"{label}: discipline is required and must be Windsurf, Windfoil, or Wingfoil.")
+            errors.append(f"{label}: discipline is required and must be Windsurf, Windfoil, Wingfoil, or Formula if you are super special.")
 
         filename = track.get("file")
         if isinstance(filename, str):

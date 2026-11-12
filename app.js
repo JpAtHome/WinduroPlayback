@@ -21,7 +21,10 @@ const TRACK_COLORS = [
   "#f5d400",
   "#6eda1b",
 ];
-const DISCIPLINES = ["Windsurf", "Windfoil", "Wingfoil"];
+
+// The Formula Discipline will be included in the Windsurf filter.
+// I'm adding special internal handling so Troy feels special
+const DISCIPLINES = ["Windsurf", "Windfoil", "Wingfoil", "Formula"];
 
 const TILE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -1555,7 +1558,7 @@ function updateDisciplineFilterButtons() {
 }
 
 function toggleDisciplineVisibility(discipline) {
-  const disciplineTracks = tracks.filter((track) => track.discipline === discipline);
+  const disciplineTracks = tracks.filter((track) => (track.discipline === discipline || (track.discipline == "Formula" && discipline == "Windsurf")));
   if (disciplineTracks.length === 0) return;
 
   const visible = !disciplineTracks.every((track) => track.visible);
