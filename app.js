@@ -1496,7 +1496,7 @@ async function loadTrack(definition) {
   track.fullLine = L.polyline([], {
     color: track.color,
     opacity: 0.28,
-    weight: 0.75,
+    weight: 1.0,
     renderer: L.canvas(),
   });
   track.progressLine = L.polyline([], {

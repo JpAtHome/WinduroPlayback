@@ -64,18 +64,14 @@
       "file": "Nikolay_B.gpx",
       "gear": "Windfoil and 7.0",
       "color": "#f04444",
-      "secondaryColor": "#009bf5",
-      "timing": {
-        "start": "2026-11-08T09:27:00-08:00",
-        "durationSeconds": 5946
-      }
+      "secondaryColor": "#009bf5"
     },
     {
       "name": "Dean P",
       "discipline": "Windfoil",
       "file": "Dean P.gpx",
       "gear": "135L JP windsurf foil board and 7.8m ePace",
-      "color": "#ffffff"
+      "color": "#dddddd"
     },
     {
       "name": "Greg M",
@@ -106,7 +102,8 @@
       "discipline": "Windsurf",
       "file": "Thomas_M.gpx",
       "gear": "200L Lambada Bic, Sailworks Retro 8.5",
-      "color": "#0576c6"
+      "color": "#0576c6",
+      "secondaryColor": "#bafc05"
     },
     {
       "name": "Christian F",
@@ -135,7 +132,7 @@
       "discipline": "Wingfoil",
       "file": "Ryan_Z.gpx",
       "gear": "80L apple tree midlength. Fone Eagle 890 foil. Unit 4.5 wing.",
-      "color": "#a777e3",
+      "color": "#ffffff",
       "timing": {
         "start": "2026-11-08T09:45:00-08:00",
         "durationSeconds": 6500
