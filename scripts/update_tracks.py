@@ -124,13 +124,12 @@ def build_by_racer_manifests(events, colors):
                 )
                 sys.exit(1)
 
-            destination_name = f"{event['id']}.gpx"
+            relative_file = f"../../by-date/{event['id']}/{track['file']}"
             racer_entries.setdefault(racer_id, []).append(
                 {
                     "event_id": event["id"],
                     "event_label": event["label"],
-                    "source_file": source_file,
-                    "destination_name": destination_name,
+                    "relative_file": relative_file,
                     "track": track,
                 }
             )
@@ -161,7 +160,7 @@ def build_by_racer_manifests(events, colors):
             manifest_track = {
                 "name": entry["event_label"],
                 "discipline": source_track.get("discipline"),
-                "file": entry["destination_name"],
+                "file": entry["relative_file"],
                 "color": color,
             }
             for optional_key in ("gear", "secondaryColor", "startTime", "timing"):
@@ -190,8 +189,6 @@ def write_by_racer(manifests):
     for racer_id, payload in sorted(manifests.items(), key=lambda item: item[0].casefold()):
         racer_dir = BY_RACER_DIR / racer_id
         racer_dir.mkdir(parents=True)
-        for entry in payload["entries"]:
-            shutil.copy2(entry["source_file"], racer_dir / entry["destination_name"])
         manifest_path = racer_dir / "tracks.json"
         manifest_path.write_text(
             json.dumps({"syncLine": payload["syncLine"], "tracks": payload["tracks"]}, indent=2) + "\n",
@@ -253,8 +250,8 @@ def main():
                     file=sys.stderr,
                 )
                 stale = True
-            for entry in payload["entries"]:
-                gpx_path = racer_dir / entry["destination_name"]
+            for track in payload["tracks"]:
+                gpx_path = (racer_dir / track["file"]).resolve()
                 if not gpx_path.is_file():
                     print(
                         f"update_tracks check failed: missing {gpx_path.relative_to(ROOT)}; run scripts/update_tracks.py.",

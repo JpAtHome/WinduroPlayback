@@ -28,7 +28,7 @@ Tracks with timestamps use their recorded times. For tracks without point timest
 
 Completion times are calculated once from the manifest's default sync line: from its synced start to the first later crossing at least 30 minutes afterward. If no qualifying crossing exists, the track end is used. Moving the playback sync line does not change participant times.
 
-Event data lives in `by-date/YYYY-MM-DD/` (`tracks.json` plus one GPX per racer). Cross-event racer views live under `by-racer/<racer_id>/`, which is generated from those event folders.
+Event data lives in `by-date/YYYY-MM-DD/` (`tracks.json` plus one GPX per racer). Cross-event racer views live under `by-racer/<racer_id>/` as generated manifests that reference GPX files in `by-date/` (no duplicate GPX copies).
 
 Use the **Event** dropdown to load one race day (`?date=YYYY-MM-DD` in the URL). Use **Racer** to compare the same person across events (`?racer=Racer_Id`). Only one of those parameters is used at a time; with no parameter, the most recent event loads. Run `python scripts/update_tracks.py` after adding dated folders to refresh `catalog.json` and the `by-racer/` manifests. Generated racer manifests assign unique primary colors from `colors.js`.
 

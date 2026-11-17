@@ -259,6 +259,13 @@ function parseGpx(xmlText) {
   return { points, hasTimestamps: timestampCount === points.length };
 }
 
+function isAllowedTrackFileReference(file) {
+  if (typeof file !== "string" || !file.toLowerCase().endsWith(".gpx")) return false;
+  if (file.includes("\\") || file.startsWith("/")) return false;
+  if (!file.includes("/")) return !file.includes("..");
+  return /^\.\.\/\.\.\/by-date\/\d{4}-\d{2}-\d{2}\/[^/]+\.gpx$/i.test(file);
+}
+
 async function loadCatalog() {
   const response = await fetch(CATALOG_URL);
   if (!response.ok) throw new Error(`Could not load event catalog (${response.status} ${response.statusText}).`);
@@ -311,6 +318,10 @@ function resolveViewSelection(catalog) {
 
 function populateViewControls(catalog) {
   ui.eventDate.replaceChildren();
+  const blankEventOption = document.createElement("option");
+  blankEventOption.value = "";
+  blankEventOption.textContent = "--";
+  ui.eventDate.append(blankEventOption);
   for (const entry of catalog.dates) {
     const option = document.createElement("option");
     option.value = entry.id;
@@ -319,10 +330,10 @@ function populateViewControls(catalog) {
   }
 
   ui.racer.replaceChildren();
-  const eventOption = document.createElement("option");
-  eventOption.value = "";
-  eventOption.textContent = "By event";
-  ui.racer.append(eventOption);
+  const blankRacerOption = document.createElement("option");
+  blankRacerOption.value = "";
+  blankRacerOption.textContent = "--";
+  ui.racer.append(blankRacerOption);
   for (const entry of catalog.racers) {
     const option = document.createElement("option");
     option.value = entry.id;
@@ -332,11 +343,10 @@ function populateViewControls(catalog) {
 
   if (viewSelection.kind === "racer") {
     ui.racer.value = viewSelection.id;
-    ui.eventDateControl.hidden = true;
+    ui.eventDate.value = "";
   } else {
     ui.eventDate.value = viewSelection.id;
     ui.racer.value = "";
-    ui.eventDateControl.hidden = false;
   }
 }
 
@@ -417,13 +427,10 @@ async function loadTrackManifest() {
     if (!entry || typeof entry.name !== "string" || !entry.name.trim()) {
       throw new Error(`Track ${index + 1} needs a non-empty name in the track manifest.`);
     }
-    if (
-      typeof entry.file !== "string" ||
-      !entry.file.toLowerCase().endsWith(".gpx") ||
-      entry.file.includes("/") ||
-      entry.file.includes("\\")
-    ) {
-      throw new Error(`Track ${entry.name} needs a GPX filename (not a path) in the track manifest.`);
+    if (!isAllowedTrackFileReference(entry.file)) {
+      throw new Error(
+        `Track ${entry.name} needs a GPX filename or ../../by-date/YYYY-MM-DD/name.gpx reference in the track manifest.`,
+      );
     }
     const fileKey = entry.file.toLowerCase();
     const nameKey = entry.name.trim().toLowerCase();
