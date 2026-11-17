@@ -15,6 +15,10 @@ COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 DISCIPLINES = {"Windsurf", "Windfoil", "Wingfoil", "Formula"}
 EARTH_RADIUS_METERS = 6_371_000
 DATE_FOLDER_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+BY_RACER_GPX_PATTERN = re.compile(
+    r"^\.\./\.\./by-date/(\d{4}-\d{2}-\d{2})/([^/\\]+\.gpx)$",
+    re.IGNORECASE,
+)
 
 
 def is_number(value):
@@ -56,16 +60,38 @@ def distance_meters(first, second):
     return EARTH_RADIUS_METERS * 2 * math.atan2(math.sqrt(haversine), math.sqrt(1 - haversine))
 
 
-def validate_track_file(track, label, timing, has_timing_metadata, start_time, tracks_dir, errors):
-    filename = track.get("file")
+def resolve_track_gpx_path(filename, manifest_path):
     if not isinstance(filename, str) or not filename.lower().endswith(".gpx"):
-        errors.append(f"{label}: file must be a GPX filename.")
-        return
-    if Path(filename).name != filename or "/" in filename or "\\" in filename:
-        errors.append(f"{label}: file must be a filename inside the manifest folder, not a path.")
-        return
+        return None
+    if "\\" in filename or filename.startswith("/"):
+        return None
+    normalized = filename.replace("\\", "/")
+    if ".." in normalized and not normalized.startswith("../../by-date/"):
+        return None
+    if "/" not in normalized:
+        path = (manifest_path.parent / normalized).resolve()
+        if path.parent != manifest_path.parent.resolve():
+            return None
+        return path
 
-    path = tracks_dir / filename
+    if not BY_RACER_GPX_PATTERN.fullmatch(normalized):
+        return None
+    path = (manifest_path.parent / normalized).resolve()
+    try:
+        path.relative_to(BY_DATE_DIR.resolve())
+    except ValueError:
+        return None
+    return path
+
+
+def validate_track_file(track, label, timing, has_timing_metadata, start_time, manifest_path, errors):
+    filename = track.get("file")
+    path = resolve_track_gpx_path(filename, manifest_path)
+    if path is None:
+        errors.append(
+            f"{label}: file must be a GPX filename in the manifest folder or ../../by-date/YYYY-MM-DD/name.gpx.",
+        )
+        return
     if not path.is_file():
         errors.append(f"{label}: {filename} does not exist.")
         return
@@ -130,7 +156,7 @@ def validate_track_file(track, label, timing, has_timing_metadata, start_time, t
             errors.append(f"{label}: {filename} has no point timestamps and needs timing.start and timing.durationSeconds.")
 
 
-def validate_manifest(manifest_path, tracks_dir):
+def validate_manifest(manifest_path):
     errors = []
     label_prefix = str(manifest_path.relative_to(ROOT))
     try:
@@ -250,7 +276,7 @@ def validate_manifest(manifest_path, tracks_dir):
                     errors.append(f"{track_label}: timing.durationSeconds must be a positive number.")
 
         if not errors:
-            validate_track_file(track, track_label, timing, has_timing_metadata, start_time, tracks_dir, errors)
+            validate_track_file(track, track_label, timing, has_timing_metadata, start_time, manifest_path, errors)
 
     return errors
 
@@ -295,7 +321,7 @@ def validate():
             continue
         manifest_path = event_dir / "tracks.json"
         if manifest_path.is_file():
-            errors.extend(validate_manifest(manifest_path, event_dir))
+            errors.extend(validate_manifest(manifest_path))
 
     if BY_RACER_DIR.is_dir():
         for racer_dir in sorted(BY_RACER_DIR.iterdir()):
@@ -303,7 +329,7 @@ def validate():
                 continue
             manifest_path = racer_dir / "tracks.json"
             if manifest_path.is_file():
-                errors.extend(validate_manifest(manifest_path, racer_dir))
+                errors.extend(validate_manifest(manifest_path))
 
     if errors:
         print("Track-data validation failed:")
