@@ -24,7 +24,8 @@ jobs:
         run: python scripts/update_tracks.py
       - name: Commit and push if output changed
         run: |
-          git add catalog.json by-racer/
+          git add catalog.json
+          git add -f by-racer/
           if git diff --staged --quiet; then
             echo "Generated output is already up to date."
             exit 0
