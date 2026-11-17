@@ -1,0 +1,90 @@
+{
+  "dates": [
+    {
+      "id": "2026-11-16",
+      "label": "11-16-2026"
+    },
+    {
+      "id": "2026-11-09",
+      "label": "11-09-2026"
+    }
+  ],
+  "racers": [
+    {
+      "id": "Christian_F",
+      "label": "Christian F"
+    },
+    {
+      "id": "Dalton_B",
+      "label": "Dalton B"
+    },
+    {
+      "id": "Dan_O",
+      "label": "Dan O"
+    },
+    {
+      "id": "Dean P",
+      "label": "Dean P"
+    },
+    {
+      "id": "Eric_H",
+      "label": "Eric H"
+    },
+    {
+      "id": "Greg_M",
+      "label": "Greg M"
+    },
+    {
+      "id": "James_K",
+      "label": "James K"
+    },
+    {
+      "id": "John_McC",
+      "label": "John McC"
+    },
+    {
+      "id": "Jon_P",
+      "label": "Jon P"
+    },
+    {
+      "id": "Maddy_F",
+      "label": "Maddy F"
+    },
+    {
+      "id": "Montana_H",
+      "label": "Montana H"
+    },
+    {
+      "id": "Nikolay_B",
+      "label": "Nikolay B"
+    },
+    {
+      "id": "Plamen_P",
+      "label": "Plamen P"
+    },
+    {
+      "id": "Ryan_Z",
+      "label": "Ryan Z"
+    },
+    {
+      "id": "Sevena_S",
+      "label": "Sevena S"
+    },
+    {
+      "id": "Stasi_B",
+      "label": "Stasi B"
+    },
+    {
+      "id": "Stefan_K",
+      "label": "Stefan K"
+    },
+    {
+      "id": "Thomas_M",
+      "label": "Thomas M"
+    },
+    {
+      "id": "Troy_V",
+      "label": "Troy V"
+    }
+  ]
+}

@@ -100,6 +100,23 @@ h2 {
   margin-bottom: 12px;
 }
 
+.view-selectors {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.view-control {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #a9b8ba;
+}
+
+.view-control select {
+  width: 100%;
+}
+
 .clock-row,
 .button-row,
 .section-title,
