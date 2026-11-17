@@ -17,5 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      - name: Check generated catalog and by-racer output
+        run: python scripts/update_tracks.py --check
       - name: Validate manifest and GPX files
         run: python scripts/validate_tracks.py

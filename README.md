@@ -28,11 +28,15 @@ Tracks with timestamps use their recorded times. For tracks without point timest
 
 Completion times are calculated once from the manifest's default sync line: from its synced start to the first later crossing at least 30 minutes afterward. If no qualifying crossing exists, the track end is used. Moving the playback sync line does not change participant times.
 
-The event manifest is `tracks/tracks.json`; it contains participant details, gear, timing estimates, track colors, and the default sync line. Set `color` and optional `secondaryColor` to six-digit hex values; secondary colors appear in participant swatches and marker outlines, while routes stay in the primary color. **Timing for untimed tracks is estimated.**
+Event data lives in `by-date/YYYY-MM-DD/` (`tracks.json` plus one GPX per racer). Cross-event racer views live under `by-racer/<racer_id>/`, which is generated from those event folders.
+
+Use the **Event** dropdown to load one race day (`?date=YYYY-MM-DD` in the URL). Use **Racer** to compare the same person across events (`?racer=Racer_Id`). Only one of those parameters is used at a time; with no parameter, the most recent event loads. Run `python scripts/update_tracks.py` after adding dated folders to refresh `catalog.json` and the `by-racer/` manifests. Generated racer manifests assign unique primary colors from `colors.js`.
+
+Each manifest contains participant details, gear, timing estimates, track colors, and the default sync line. Set `color` and optional `secondaryColor` to six-digit hex values in event manifests; secondary colors appear in participant swatches and marker outlines, while routes stay in the primary color. **Timing for untimed tracks is estimated.**
 
 ## Contributing track data
 
-Before opening a PR, run `python scripts/validate_tracks.py`. GitHub Actions runs the same check for every PR. Each participant needs a unique primary `color`; `secondaryColor` is optional. The check also validates manifest fields, timing metadata, GPX coordinates, and timestamps.
+Add or update a dated folder under `by-date/`, then run `python scripts/update_tracks.py` and `python scripts/validate_tracks.py`. GitHub Actions runs the update check and validation on every PR. Each participant needs a unique primary `color` in event manifests; `secondaryColor` is optional. The check also validates catalog freshness, manifest fields, timing metadata, GPX coordinates, and timestamps.
 
 For a timestamped track that needs a manual crossing at the default sync gate, set top-level `startTime` to the intended ISO 8601 timestamp. The override is ignored for non-default gates, where crossings are recalculated from the GPX route. For tracks without point timestamps, put estimated timing in a `timing` object with `start` and `durationSeconds`.
 

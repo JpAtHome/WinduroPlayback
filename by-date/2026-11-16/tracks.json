@@ -1,0 +1,23 @@
+{
+  "syncLine": {
+    "start": [47.565535, -122.192076],
+    "end": [47.565553, -122.196534]
+  },
+  "tracks": [
+    {
+      "name": "James K",
+      "discipline": "Windsurf",
+      "file": "James_K.gpx",
+      "gear": "Mistral One Design and 5.8",
+      "color": "#ff7297"
+    },
+    {
+      "name": "Sevena S",
+      "discipline": "Windsurf",
+      "file": "Sevena_S.gpx",
+      "gear": "Windsurfer LT and 6.3 Goya Bonzai",
+      "color": "#d1da12",
+      "secondaryColor": "#7e0932"
+    }
+  ]
+}
