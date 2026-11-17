@@ -18,6 +18,20 @@
       "gear": "Windsurfer LT and 6.3 Goya Bonzai",
       "color": "#d1da12",
       "secondaryColor": "#7e0932"
+    },
+    {
+      "name": "Thomas M",
+      "file": "Thomas_M.gpx",
+      "discipline": "Windfoil",
+      "color": "#32cd32",
+      "gear": "125L Fanatic Bee,1750 Fanatic foil, 8M Duotone Ventis"
+    },
+    {
+      "name": "Stewart M",
+      "file": "Stewart_M.gpx",
+      "discipline": "Windsurf",
+      "color": "#ff00a3",
+      "gear": "Windsurfer LT and 7.8 Gaastra Matrix"
     }
   ]
 }

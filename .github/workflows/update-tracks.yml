@@ -1,0 +1,36 @@
+name: Update track catalogs
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: update-tracks-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update-tracks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Regenerate catalog and by-racer manifests
+        run: python scripts/update_tracks.py
+      - name: Commit and push if output changed
+        run: |
+          git add catalog.json by-racer/
+          if git diff --staged --quiet; then
+            echo "Generated output is already up to date."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "Regenerate catalog and by-racer manifests"
+          git push
+      - name: Validate manifest and GPX files
+        run: python scripts/validate_tracks.py
