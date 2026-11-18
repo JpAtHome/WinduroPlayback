@@ -312,7 +312,7 @@ def validate_catalog():
     return errors
 
 
-def validate():
+def validate(by_date_only=False):
     errors = []
     errors.extend(validate_catalog())
 
@@ -323,7 +323,7 @@ def validate():
         if manifest_path.is_file():
             errors.extend(validate_manifest(manifest_path))
 
-    if BY_RACER_DIR.is_dir():
+    if not by_date_only and BY_RACER_DIR.is_dir():
         for racer_dir in sorted(BY_RACER_DIR.iterdir()):
             if not racer_dir.is_dir():
                 continue
@@ -338,13 +338,27 @@ def validate():
         return 1
 
     manifest_count = sum(1 for _ in BY_DATE_DIR.glob("*/tracks.json"))
-    racer_count = sum(1 for _ in BY_RACER_DIR.glob("*/tracks.json")) if BY_RACER_DIR.is_dir() else 0
-    print(
-        f"Validated catalog, {manifest_count} event manifests, {racer_count} racer manifests, "
-        "sync lines, colors, and GPX data.",
-    )
+    racer_count = 0 if by_date_only else sum(1 for _ in BY_RACER_DIR.glob("*/tracks.json")) if BY_RACER_DIR.is_dir() else 0
+    if by_date_only:
+        print(
+            f"Validated catalog, {manifest_count} event manifests, sync lines, colors, and GPX data.",
+        )
+    else:
+        print(
+            f"Validated catalog, {manifest_count} event manifests, {racer_count} racer manifests, "
+            "sync lines, colors, and GPX data.",
+        )
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(validate())
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Validate track manifests and GPX files.")
+    parser.add_argument(
+        "--by-date-only",
+        action="store_true",
+        help="Validate only by-date event folders (skip by-racer manifests).",
+    )
+    args = parser.parse_args()
+    sys.exit(validate(by_date_only=args.by_date_only))

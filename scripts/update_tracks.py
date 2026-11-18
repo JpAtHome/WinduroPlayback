@@ -203,6 +203,11 @@ def main():
         action="store_true",
         help="Exit with status 1 if generated catalog.json or by-racer output is out of date.",
     )
+    parser.add_argument(
+        "--check-catalog-only",
+        action="store_true",
+        help="With --check, only verify catalog.json (skip by-racer output).",
+    )
     args = parser.parse_args()
 
     colors = load_colors()
@@ -232,6 +237,12 @@ def main():
                     file=sys.stderr,
                 )
                 stale = True
+
+        if args.check_catalog_only:
+            if stale:
+                sys.exit(1)
+            print(f"catalog.json is up to date for {len(events)} events and {len(racer_ids)} racers.")
+            return 0
 
         for racer_id, payload in manifests.items():
             racer_dir = BY_RACER_DIR / racer_id
