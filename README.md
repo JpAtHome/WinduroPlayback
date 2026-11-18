@@ -36,7 +36,7 @@ Each manifest contains participant details, gear, timing estimates, track colors
 
 ## Contributing track data
 
-Add or update a dated folder under `by-date/`, then run `python scripts/validate_tracks.py` (and optionally `python scripts/update_tracks.py` to refresh generated files locally). GitHub Actions runs the update check and validation on every PR. When changes merge to `main`, Actions runs `scripts/update_tracks.py`, commits any regenerated `catalog.json` and `by-racer/` output, and validates manifests and GPX files. Each participant needs a unique primary `color` in event manifests; `secondaryColor` is optional. The check also validates catalog freshness, manifest fields, timing metadata, GPX coordinates, and timestamps.
+Add or update a dated folder under `by-date/`, then run `python scripts/validate_tracks.py` (and optionally `python scripts/update_tracks.py` to refresh generated files locally). GitHub Actions runs the update check and validation on every PR. When changes merge to `main`, Actions runs `scripts/update_tracks.py`, validates manifests and GPX files, and deploys the site, including the generated `by-racer/` output (which is not committed), to GitHub Pages. Each participant needs a unique primary `color` in event manifests; `secondaryColor` is optional. The check also validates catalog freshness, manifest fields, timing metadata, GPX coordinates, and timestamps.
 
 For a timestamped track that needs a manual crossing at the default sync gate, set top-level `startTime` to the intended ISO 8601 timestamp. The override is ignored for non-default gates, where crossings are recalculated from the GPX route. For tracks without point timestamps, put estimated timing in a `timing` object with `start` and `durationSeconds`.
 
@@ -45,3 +45,4 @@ For a timestamped track that needs a manual crossing at the default sync gate, s
 The map uses [Leaflet 1.9.4](https://leafletjs.com/reference-1.9.4.html) and Esri World Imagery. Imagery attribution is shown on the map; review [Esri's World Imagery terms](https://goto.arcgisonline.com/maps/World_Imagery) and [data attribution guidance](https://www.esri.com/en-us/legal/terms/data-attributions).
 
 This public site includes participant GPX tracks and precise route locations. The participants have approved their publication.
+
