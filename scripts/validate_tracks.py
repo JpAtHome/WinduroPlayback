@@ -12,7 +12,7 @@ BY_DATE_DIR = ROOT / "by-date"
 BY_RACER_DIR = ROOT / "by-racer"
 CATALOG_PATH = ROOT / "catalog.json"
 COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
-DISCIPLINES = {"Windsurf", "Windfoil", "Wingfoil", "Formula"}
+DISCIPLINES = {"Windsurf", "Windfoil", "Wingfoil", "Parawing", "Formula"}
 EARTH_RADIUS_METERS = 6_371_000
 DATE_FOLDER_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 BY_RACER_GPX_PATTERN = re.compile(
@@ -212,7 +212,7 @@ def validate_manifest(manifest_path):
         discipline = track.get("discipline")
         if not isinstance(discipline, str) or discipline not in DISCIPLINES:
             errors.append(
-                f"{track_label}: discipline is required and must be Windsurf, Windfoil, Wingfoil, or Formula if you are super special.",
+                f"{track_label}: discipline is required and must be Windsurf, Windfoil, Wingfoil, Parawing, or Formula if you are super special.",
             )
 
         filename = track.get("file")

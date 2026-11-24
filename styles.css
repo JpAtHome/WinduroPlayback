@@ -434,6 +434,12 @@ button:disabled {
   color: #f3d9a8;
 }
 
+.track-discipline-badge[data-discipline="Parawing"] {
+  border-color: #4c9a67;
+  background: #203d2b;
+  color: #c3edcf;
+}
+
 .track-discipline-badge[data-discipline="Formula"] {
   border-color: #ff2525;
   background: linear-gradient(145deg, #8b0000, #3b0505);

@@ -27,7 +27,7 @@ const TRACK_COLORS = [
 
 // The Formula Discipline will be included in the Windsurf filter.
 // I'm adding special internal handling so Troy feels special
-const DISCIPLINES = ["Windsurf", "Windfoil", "Wingfoil", "Formula"];
+const DISCIPLINES = ["Windsurf", "Windfoil", "Wingfoil", "Parawing", "Formula"];
 
 const TILE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -446,7 +446,7 @@ async function loadTrackManifest() {
     }
     if (!DISCIPLINES.includes(entry.discipline)) {
       throw new Error(
-        `${entry.name} discipline must be Windsurf, Windfoil, or Wingfoil in the track manifest.`,
+        `${entry.name} discipline must be Windsurf, Windfoil, Wingfoil, Parawing, or Formula in the track manifest.`,
       );
     }
 
