@@ -1,0 +1,106 @@
+{
+  "syncLine": {
+    "start": [47.565778, -122.199157],
+    "end": [47.565749, -122.192227]
+  },
+  "tracks": [
+    {
+      "name": "Brian K",
+      "discipline": "Windsurf",
+      "file": "Brian_K.gpx",
+      "gear": "F2 6.3m Goya",
+      "color": "#925fd3"
+    },
+    {
+      "name": "Eric H",
+      "discipline": "Windsurf",
+      "file": "Eric_H.gpx",
+      "gear": "LT 6.0m Prisma",
+      "color": "#4d82bd"
+    },
+    {
+      "name": "Greg M",
+      "discipline": "Windsurf",
+      "file": "Greg_M.gpx",
+      "gear": "Megacat 6.0m Ezzy",
+      "color": "#d62828"
+    },
+    {
+      "name": "Jon P",
+      "discipline": "Windsurf",
+      "file": "Jon_P.gpx",
+      "gear": "Equipe 7.5m Retro",
+      "color": "#f5d400"
+    },
+    {
+      "name": "Mark D",
+      "discipline": "Windsurf",
+      "file": "Mark_D.gpx",
+      "gear": "Superlight II 6.0m X-T",
+      "color": "#c9bd31"
+    },
+    {
+      "name": "Glenn R",
+      "discipline": "Windfoil",
+      "file": "Glenn_R.gpx",
+      "gear": "168L 1370 foil 6.2m",
+      "color": "#8bbe38"
+    },
+    {
+      "name": "Nikolay B",
+      "discipline": "Windfoil",
+      "file": "Nikolay_B.gpx",
+      "gear": "900foil 6.0m",
+      "color": "#f04444"
+    },
+    {
+      "name": "Wilson S",
+      "discipline": "Windfoil",
+      "file": "Wilson_S.gpx",
+      "gear": "145L 6.0m",
+      "color": "#c94693"
+    },
+    {
+      "name": "Alan A",
+      "discipline": "Wingfoil",
+      "file": "Alan_A.gpx",
+      "gear": "KT80L DW750 4.3m",
+      "color": "#adb041"
+    },
+    {
+      "name": "Christian F",
+      "discipline": "Wingfoil",
+      "file": "Christian_F.gpx",
+      "gear": "DT105L 4.4m",
+      "color": "#32cd32"
+    },
+    {
+      "name": "Eric K",
+      "discipline": "Wingfoil",
+      "file": "Eric_K.gpx",
+      "gear": "DT100L 4.2m",
+      "color": "#ab40ae"
+    },
+    {
+      "name": "Junli Y",
+      "discipline": "Wingfoil",
+      "file": "Junli_Y.gpx",
+      "gear": "Naish125L 4.5m",
+      "color": "#5970da"
+    },
+    {
+      "name": "Mirza G",
+      "discipline": "Parawing",
+      "file": "Mirza_G.gpx",
+      "gear": "K2 80L 3m 4m 5m",
+      "color": "#e271d6"
+    },
+    {
+      "name": "Sergey M",
+      "discipline": "Parawing",
+      "file": "Sergey_M.gpx",
+      "gear": "Sunovar Carver 85L 3.6m 4.3m",
+      "color": "#49a037"
+    }
+  ]
+}

@@ -7,9 +7,21 @@
     {
       "id": "2026-11-09",
       "label": "11-09-2026"
+    },
+    {
+      "id": "2025-10-19",
+      "label": "10-19-2025"
     }
   ],
   "racers": [
+    {
+      "id": "Alan_A",
+      "label": "Alan A"
+    },
+    {
+      "id": "Brian_K",
+      "label": "Brian K"
+    },
     {
       "id": "Christian_F",
       "label": "Christian F"
@@ -31,6 +43,14 @@
       "label": "Eric H"
     },
     {
+      "id": "Eric_K",
+      "label": "Eric K"
+    },
+    {
+      "id": "Glenn_R",
+      "label": "Glenn R"
+    },
+    {
       "id": "Greg_M",
       "label": "Greg M"
     },
@@ -47,8 +67,20 @@
       "label": "Jon P"
     },
     {
+      "id": "Junli_Y",
+      "label": "Junli Y"
+    },
+    {
       "id": "Maddy_F",
       "label": "Maddy F"
+    },
+    {
+      "id": "Mark_D",
+      "label": "Mark D"
+    },
+    {
+      "id": "Mirza_G",
+      "label": "Mirza G"
     },
     {
       "id": "Montana_H",
@@ -65,6 +97,10 @@
     {
       "id": "Ryan_Z",
       "label": "Ryan Z"
+    },
+    {
+      "id": "Sergey_M",
+      "label": "Sergey M"
     },
     {
       "id": "Sevena_S",
@@ -89,6 +125,10 @@
     {
       "id": "Troy_V",
       "label": "Troy V"
+    },
+    {
+      "id": "Wilson_S",
+      "label": "Wilson S"
     }
   ]
 }
