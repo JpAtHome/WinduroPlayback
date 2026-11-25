@@ -336,15 +336,14 @@ button:disabled {
 }
 
 .discipline-filters {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-bottom: 10px;
 }
 
 .discipline-filter {
   min-width: 0;
-  flex: 1 1 auto;
   padding: 5px 8px;
   font-size: 0.68rem;
 }
@@ -438,21 +437,6 @@ button:disabled {
   border-color: #4c9a67;
   background: #203d2b;
   color: #c3edcf;
-}
-
-.track-discipline-badge[data-discipline="Formula"] {
-  border-color: #ff2525;
-  background: linear-gradient(145deg, #8b0000, #3b0505);
-  color: #ffffff;
-  box-shadow: 0 0 8px rgba(255, 0, 0, 0.45);
-  font-weight: 800;
-}
-
-.track-discipline-badge[data-discipline="Formula"]:hover {
-  background: linear-gradient(145deg, #ff2020, #850000);
-  border-color: #ff5555;
-  box-shadow: 0 0 16px rgba(255, 0, 0, 0.75);
-  transform: scale(1.05);
 }
 
 .track-completion {
