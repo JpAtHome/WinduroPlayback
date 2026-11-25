@@ -1,0 +1,26 @@
+{
+  "syncLine": {
+    "start": [47.566914, -122.200241],
+    "end": [47.566914, -122.194565]
+  },
+  "tracks": [
+    {
+      "name": "Brendan K",
+      "discipline": "Wingfoil",
+      "file": "Brendan_K.gpx",
+      "color": "#5970da"
+    },
+    {
+      "name": "Darius L",
+      "discipline": "Windfoil",
+      "file": "Darius_L.gpx",
+      "color": "#925fd3"
+    },
+    {
+      "name": "Sergey M",
+      "discipline": "Wingfoil",
+      "file": "Sergey_M.gpx",
+      "color": "#49a037"
+    }
+  ]
+}
