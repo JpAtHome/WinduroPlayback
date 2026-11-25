@@ -1,0 +1,50 @@
+{
+  "syncLine": {
+    "start": [47.565778, -122.199157],
+    "end": [47.565749, -122.192227]
+  },
+  "tracks": [
+    {
+      "name": "Darius L",
+      "discipline": "Windfoil",
+      "file": "Darius_L.gpx",
+      "color": "#adb041"
+    },
+    {
+      "name": "Glenn R",
+      "discipline": "Windfoil",
+      "file": "Glenn_R.gpx",
+      "color": "#925fd3"
+    },
+    {
+      "name": "Greg M",
+      "discipline": "Windsurf",
+      "file": "Greg_M.gpx",
+      "color": "#57cc61"
+    },
+    {
+      "name": "Mark D",
+      "discipline": "Windsurf",
+      "file": "Mark_D.gpx",
+      "color": "#ab40ae"
+    },
+    {
+      "name": "Nikolay B",
+      "discipline": "Windfoil",
+      "file": "Nikolay_B.gpx",
+      "color": "#8bbe38"
+    },
+    {
+      "name": "Thomas M",
+      "discipline": "Wingfoil",
+      "file": "Thomas_M.gpx",
+      "color": "#5970da"
+    },
+    {
+      "name": "Tim E",
+      "discipline": "Windsurf",
+      "file": "Tim_E.gpx",
+      "color": "#c9bd31"
+    }
+  ]
+}

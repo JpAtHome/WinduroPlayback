@@ -11,6 +11,10 @@
     {
       "id": "2025-10-19",
       "label": "10-19-2025"
+    },
+    {
+      "id": "2025-10-12",
+      "label": "10-12-2025"
     }
   ],
   "racers": [
@@ -33,6 +37,10 @@
     {
       "id": "Dan_O",
       "label": "Dan O"
+    },
+    {
+      "id": "Darius_L",
+      "label": "Darius L"
     },
     {
       "id": "Dean P",
@@ -121,6 +129,10 @@
     {
       "id": "Thomas_M",
       "label": "Thomas M"
+    },
+    {
+      "id": "Tim_E",
+      "label": "Tim E"
     },
     {
       "id": "Troy_V",
