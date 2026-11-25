@@ -15,12 +15,20 @@
     {
       "id": "2025-10-12",
       "label": "10-12-2025"
+    },
+    {
+      "id": "2024-10-27",
+      "label": "10-27-2024"
     }
   ],
   "racers": [
     {
       "id": "Alan_A",
       "label": "Alan A"
+    },
+    {
+      "id": "Brendan_K",
+      "label": "Brendan K"
     },
     {
       "id": "Brian_K",
