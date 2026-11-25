@@ -242,6 +242,9 @@ def validate_manifest(manifest_path):
         if gear is not None and (not isinstance(gear, str) or not gear.strip()):
             errors.append(f"{track_label}: gear must be a non-empty string when provided.")
 
+        if "finished" in track and not isinstance(track["finished"], bool):
+            errors.append(f"{track_label}: finished must be a boolean when provided.")
+
         if track.get("syncTime") is not None:
             errors.append(f"{track_label}: syncTime is no longer supported; use top-level startTime.")
         if "syncAtStart" in track:
