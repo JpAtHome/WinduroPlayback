@@ -44,7 +44,8 @@
       "discipline": "Windfoil",
       "file": "Glenn_R.gpx",
       "gear": "168L 1370 foil 6.2m",
-      "color": "#8bbe38"
+      "color": "#8bbe38",
+      "finished": false
     },
     {
       "name": "Nikolay B",
@@ -79,7 +80,8 @@
       "discipline": "Wingfoil",
       "file": "Eric_K.gpx",
       "gear": "DT100L 4.2m",
-      "color": "#ab40ae"
+      "color": "#ab40ae",
+      "finished": false
     },
     {
       "name": "Junli Y",
@@ -93,14 +95,16 @@
       "discipline": "Parawing",
       "file": "Mirza_G.gpx",
       "gear": "K2 80L 3m 4m 5m",
-      "color": "#e271d6"
+      "color": "#e271d6",
+      "finished": false
     },
     {
       "name": "Sergey M",
       "discipline": "Parawing",
       "file": "Sergey_M.gpx",
       "gear": "Sunovar Carver 85L 3.6m 4.3m",
-      "color": "#49a037"
+      "color": "#49a037",
+      "finished": false
     }
   ]
 }

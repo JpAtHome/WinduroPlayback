@@ -32,7 +32,8 @@
       "name": "Nikolay B",
       "discipline": "Windfoil",
       "file": "Nikolay_B.gpx",
-      "color": "#8bbe38"
+      "color": "#8bbe38",
+      "finished": false
     },
     {
       "name": "Thomas M",

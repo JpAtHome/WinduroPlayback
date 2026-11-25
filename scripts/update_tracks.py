@@ -163,7 +163,7 @@ def build_by_racer_manifests(events, colors):
                 "file": entry["relative_file"],
                 "color": color,
             }
-            for optional_key in ("gear", "secondaryColor", "startTime", "timing"):
+            for optional_key in ("gear", "secondaryColor", "startTime", "timing", "finished"):
                 if optional_key in source_track:
                     manifest_track[optional_key] = source_track[optional_key]
             manifest_tracks.append(manifest_track)
