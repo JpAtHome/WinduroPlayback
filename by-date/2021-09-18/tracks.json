@@ -1,0 +1,72 @@
+{
+  "syncLine": {
+    "start": [
+      47.566594,
+      -122.199758
+    ],
+    "end": [
+      47.566594,
+      -122.191786
+    ]
+  },
+  "tracks": [
+    {
+      "name": "Alan A",
+      "discipline": "Windfoil",
+      "file": "Alan_A.gpx",
+      "color": "#adb041",
+      "secondaryColor": "#57bcf1"
+    },
+    {
+      "name": "Brian K",
+      "discipline": "Windsurf",
+      "file": "Brian_K.gpx",
+      "color": "#4d82bd"
+    },
+    {
+      "name": "Fletcher K",
+      "discipline": "Windsurf",
+      "file": "Fletcher_K.gpx",
+      "color": "#8bbe38"
+    },
+    {
+      "name": "Greg M",
+      "discipline": "Windsurf",
+      "file": "Greg_M.gpx",
+      "color": "#d62828",
+      "secondaryColor": "#ffffff"
+    },
+    {
+      "name": "Jon P",
+      "discipline": "Windsurf",
+      "file": "Jon_P.gpx",
+      "color": "#f5d400"
+    },
+    {
+      "name": "Michal P",
+      "discipline": "Windfoil",
+      "file": "Michal_P.gpx",
+      "color": "#e36a2d"
+    },
+    {
+      "name": "Nicolas M",
+      "discipline": "Windfoil",
+      "file": "Nicolas_M.gpx",
+      "color": "#49a037",
+      "finished": false
+    },
+    {
+      "name": "Plamen P",
+      "discipline": "Windfoil",
+      "file": "Plamen_P.gpx",
+      "color": "#1bdac7"
+    },
+    {
+      "name": "Wilson S",
+      "discipline": "Windfoil",
+      "file": "Wilson_S.gpx",
+      "color": "#c94693",
+      "finished": false
+    }
+  ]
+}

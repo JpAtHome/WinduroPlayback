@@ -14,7 +14,8 @@
       "name": "Darius L",
       "discipline": "Windfoil",
       "file": "Darius_L.gpx",
-      "color": "#925fd3"
+      "color": "#925fd3",
+      "secondaryColor": "#e53935"
     },
     {
       "name": "Sergey M",

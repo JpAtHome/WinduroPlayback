@@ -1,0 +1,147 @@
+{
+  "syncLine": {
+    "start": [
+      47.566189,
+      -122.198717
+    ],
+    "end": [
+      47.566189,
+      -122.191979
+    ]
+  },
+  "tracks": [
+    {
+      "name": "Darius L",
+      "discipline": "Windfoil",
+      "file": "Darius_L.gpx",
+      "gear": "8.5 sail",
+      "color": "#925fd3",
+      "secondaryColor": "#e53935"
+    },
+    {
+      "name": "Nikolay B",
+      "discipline": "Windfoil",
+      "file": "Nikolay_B.gpx",
+      "gear": "7.0 sail",
+      "color": "#f04444"
+    },
+    {
+      "name": "Plamen P",
+      "discipline": "Windfoil",
+      "file": "Plamen_P.gpx",
+      "gear": "8.5 sail",
+      "color": "#1bdac7"
+    },
+    {
+      "name": "Brian F",
+      "discipline": "Windfoil",
+      "file": "Brian_F.gpx",
+      "gear": "7.0 sail",
+      "color": "#d62828",
+      "secondaryColor": "#57bcf1"
+    },
+    {
+      "name": "Brian K",
+      "discipline": "Windsurf",
+      "file": "Brian_K.gpx",
+      "gear": "7.5 sail",
+      "color": "#4d82bd"
+    },
+    {
+      "name": "Steve S",
+      "discipline": "Windfoil",
+      "file": "Steve_S.gpx",
+      "gear": "6.0 sail",
+      "color": "#c9bd31"
+    },
+    {
+      "name": "Mats E",
+      "discipline": "Windsurf",
+      "file": "Mats_E.gpx",
+      "gear": "8.5 sail",
+      "color": "#57cc61",
+      "secondaryColor": "#ffffff"
+    },
+    {
+      "name": "Mark D",
+      "discipline": "Windsurf",
+      "file": "Mark_D.gpx",
+      "gear": "8.5 sail",
+      "color": "#ab40ae"
+    },
+    {
+      "name": "Stefan K",
+      "discipline": "Windsurf",
+      "file": "Stefan_K.gpx",
+      "gear": "8.5 sail",
+      "color": "#4169e1"
+    },
+    {
+      "name": "Jon P",
+      "discipline": "Windsurf",
+      "file": "Jon_P.gpx",
+      "gear": "7.5 sail",
+      "color": "#f5d400"
+    },
+    {
+      "name": "Nir A",
+      "discipline": "Windsurf",
+      "file": "Nir_A.gpx",
+      "gear": "9.0 sail",
+      "color": "#8bbe38"
+    },
+    {
+      "name": "Tuu N",
+      "discipline": "Windsurf",
+      "file": "Tuu_N.gpx",
+      "gear": "6.0 sail",
+      "color": "#ff8c00",
+      "secondaryColor": "#5970da"
+    },
+    {
+      "name": "Thomas M",
+      "discipline": "Wingfoil",
+      "file": "Thomas_M.gpx",
+      "gear": "8.0 wing",
+      "color": "#0576c6"
+    },
+    {
+      "name": "Dan O",
+      "discipline": "Windsurf",
+      "file": "Dan_O.gpx",
+      "gear": "7.5 sail",
+      "color": "#ff00a3"
+    },
+    {
+      "name": "Jeff T",
+      "discipline": "Wingfoil",
+      "file": "Jeff_T.gpx",
+      "gear": "7.0 wing",
+      "color": "#adb041",
+      "secondaryColor": "#e271d6"
+    },
+    {
+      "name": "Troy V",
+      "discipline": "Formula",
+      "file": "Troy_V.gpx",
+      "gear": "8.5 sail",
+      "color": "#00c853"
+    },
+    {
+      "name": "Morgan F",
+      "discipline": "Wingfoil",
+      "file": "Morgan_F.gpx",
+      "gear": "8.0 wing",
+      "color": "#ec6a5c",
+      "finished": false
+    },
+    {
+      "name": "Sevena S",
+      "discipline": "Windsurf",
+      "file": "Sevena_S.gpx",
+      "gear": "6.2 sail",
+      "color": "#d1da12",
+      "finished": false
+    }
+  ]
+}
