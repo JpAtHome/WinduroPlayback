@@ -9,7 +9,8 @@
       "discipline": "Windsurf",
       "file": "James_K.gpx",
       "gear": "Mistral One Design and 8.5 RSX",
-      "color": "#ff7297"
+      "color": "#ff7297",
+      "finished": false
     },
     {
       "name": "Sevena S",
@@ -22,7 +23,7 @@
     {
       "name": "Thomas M",
       "file": "Thomas_M.gpx",
-      "discipline": "Windfoil",
+      "discipline": "Wingfoil",
       "color": "#32cd32",
       "gear": "125L Fanatic Bee,1750 Fanatic foil, 8M Duotone Ventis"
     },
