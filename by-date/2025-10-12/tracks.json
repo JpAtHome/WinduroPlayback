@@ -14,13 +14,14 @@
       "name": "Glenn R",
       "discipline": "Windfoil",
       "file": "Glenn_R.gpx",
-      "color": "#925fd3"
+      "color": "#925fd3",
+      "secondaryColor": "#ffffff"
     },
     {
       "name": "Greg M",
       "discipline": "Windsurf",
       "file": "Greg_M.gpx",
-      "color": "#57cc61"
+      "color": "#d62828"
     },
     {
       "name": "Mark D",
@@ -32,20 +33,21 @@
       "name": "Nikolay B",
       "discipline": "Windfoil",
       "file": "Nikolay_B.gpx",
-      "color": "#8bbe38",
+      "color": "#1ee32e",
       "finished": false
     },
     {
       "name": "Thomas M",
       "discipline": "Wingfoil",
       "file": "Thomas_M.gpx",
-      "color": "#5970da"
+      "color": "#0576c6"
     },
     {
       "name": "Tim E",
       "discipline": "Windsurf",
       "file": "Tim_E.gpx",
-      "color": "#c9bd31"
+      "color": "#c9bd31",
+      "secondaryColor": "#e53935"
     }
   ]
 }

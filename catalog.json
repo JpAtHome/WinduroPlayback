@@ -19,6 +19,22 @@
     {
       "id": "2024-10-27",
       "label": "10-27-2024"
+    },
+    {
+      "id": "2024-10-19",
+      "label": "10-19-2024"
+    },
+    {
+      "id": "2023-09-04",
+      "label": "09-04-2023"
+    },
+    {
+      "id": "2022-10-30",
+      "label": "10-30-2022"
+    },
+    {
+      "id": "2021-09-18",
+      "label": "09-18-2021"
     }
   ],
   "racers": [
@@ -29,6 +45,14 @@
     {
       "id": "Brendan_K",
       "label": "Brendan K"
+    },
+    {
+      "id": "Brian_C",
+      "label": "Brian C"
+    },
+    {
+      "id": "Brian_F",
+      "label": "Brian F"
     },
     {
       "id": "Brian_K",
@@ -63,6 +87,14 @@
       "label": "Eric K"
     },
     {
+      "id": "Fletcher_K",
+      "label": "Fletcher K"
+    },
+    {
+      "id": "Giovanni_M",
+      "label": "Giovanni M"
+    },
+    {
       "id": "Glenn_R",
       "label": "Glenn R"
     },
@@ -71,8 +103,16 @@
       "label": "Greg M"
     },
     {
+      "id": "Gus_G",
+      "label": "Gus G"
+    },
+    {
       "id": "James_K",
       "label": "James K"
+    },
+    {
+      "id": "Jeff_T",
+      "label": "Jeff T"
     },
     {
       "id": "John_McC",
@@ -95,6 +135,14 @@
       "label": "Mark D"
     },
     {
+      "id": "Mats_E",
+      "label": "Mats E"
+    },
+    {
+      "id": "Michal_P",
+      "label": "Michal P"
+    },
+    {
       "id": "Mirza_G",
       "label": "Mirza G"
     },
@@ -103,8 +151,20 @@
       "label": "Montana H"
     },
     {
+      "id": "Morgan_F",
+      "label": "Morgan F"
+    },
+    {
+      "id": "Nicolas_M",
+      "label": "Nicolas M"
+    },
+    {
       "id": "Nikolay_B",
       "label": "Nikolay B"
+    },
+    {
+      "id": "Nir_A",
+      "label": "Nir A"
     },
     {
       "id": "Plamen_P",
@@ -131,6 +191,10 @@
       "label": "Stefan K"
     },
     {
+      "id": "Steve_S",
+      "label": "Steve S"
+    },
+    {
       "id": "Stewart_M",
       "label": "Stewart M"
     },
@@ -145,6 +209,10 @@
     {
       "id": "Troy_V",
       "label": "Troy V"
+    },
+    {
+      "id": "Tuu_N",
+      "label": "Tuu N"
     },
     {
       "id": "Wilson_S",

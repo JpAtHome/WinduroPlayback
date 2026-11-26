@@ -9,7 +9,8 @@
       "discipline": "Windsurf",
       "file": "Brian_K.gpx",
       "gear": "F2 6.3m Goya",
-      "color": "#925fd3"
+      "color": "#925fd3",
+      "secondaryColor": "#e53935"
     },
     {
       "name": "Eric H",
@@ -45,6 +46,7 @@
       "file": "Glenn_R.gpx",
       "gear": "168L 1370 foil 6.2m",
       "color": "#8bbe38",
+      "secondaryColor": "#ffffff",
       "finished": false
     },
     {
@@ -66,7 +68,8 @@
       "discipline": "Wingfoil",
       "file": "Alan_A.gpx",
       "gear": "KT80L DW750 4.3m",
-      "color": "#adb041"
+      "color": "#e0e625",
+      "secondaryColor": "#57bcf1"
     },
     {
       "name": "Christian F",
@@ -104,6 +107,7 @@
       "file": "Sergey_M.gpx",
       "gear": "Sunovar Carver 85L 3.6m 4.3m",
       "color": "#49a037",
+      "secondaryColor": "#ff362b",
       "finished": false
     }
   ]
