@@ -442,6 +442,9 @@ async function loadTrackManifest() {
     if (hasGear && (typeof entry.gear !== "string" || !entry.gear.trim())) {
       throw new Error(`${entry.name} gear must be a non-empty string in the track manifest.`);
     }
+    if (entry.finished !== undefined && typeof entry.finished !== "boolean") {
+      throw new Error(`${entry.name} finished must be a boolean in the track manifest.`);
+    }
     if (!DISCIPLINES.includes(entry.discipline)) {
       throw new Error(
         `${entry.name} discipline must be Windsurf, Windfoil, Wingfoil, Parawing, or Formula in the track manifest.`,
@@ -529,6 +532,7 @@ async function loadTrackManifest() {
       file: entry.file,
       discipline: entry.discipline,
       gear: hasGear ? entry.gear.trim() : null,
+      finished: entry.finished ?? true,
       startTime: hasStartTime ? entry.startTime : null,
       timing,
       color,
@@ -878,6 +882,7 @@ function calculateTrackCompletion(track, line) {
   track.completionTime =
     finishElapsed === null ? track.absoluteEnd : track.absoluteStart + finishElapsed;
   track.completionDuration = Math.max(0, track.completionTime - track.completionStartTime);
+  track.dnfDuration = Math.max(0, track.absoluteEnd - track.completionStartTime);
   if (track.card) setTrackTimes(track);
 }
 
@@ -1139,8 +1144,9 @@ function setTrackDetailsExpanded(expanded) {
 function setTrackError(track, message) {
   track.error = message;
   if (track.cardDetail) {
-    track.cardCompletion.textContent = "Unavailable";
-    track.cardCompletion.title = "Completion duration unavailable";
+    track.cardCompletion.textContent = track.finished ? "Unavailable" : "DNF";
+    track.cardCompletion.title =
+      track.finished ? "Completion duration unavailable" : "Did not finish.";
     track.cardGear.textContent = track.gear ? `Gear: ${track.gear}` : "Gear: not provided";
     track.cardTimes.textContent = "Start and finish times unavailable";
     track.cardDetail.textContent = message;
@@ -1162,6 +1168,10 @@ function gpsHoldNote(track) {
 function setTrackTimes(track) {
   if (track.error) return;
   track.card.classList.toggle("track-card-estimated", Boolean(track.approximate));
+  if (!track.finished) {
+    track.cardCompletion.textContent = "DNF";
+    track.cardCompletion.title = "Did not finish.";
+  }
   if (track.hasTimestamps) {
     if (track.timing) {
       setTrackError(track, `${track.name} timing is only for tracks without GPX timestamps.`);
@@ -1205,19 +1215,25 @@ function setTrackTimes(track) {
     const finishMethod = Number.isFinite(track.finishElapsed)
       ? "finish-line crossing"
       : "end of recorded track";
-    track.cardCompletion.textContent = `${track.approximate ? "* " : ""}${formatDuration(completionDuration)}`;
-    track.cardCompletion.title = `${track.approximate ? "Estimated " : ""}duration from sync start to ${finishMethod}.`;
-    track.cardTimes.textContent =
-      `Start: ${formatClock(completionStartTime)} · Finish: ${formatClock(completionTime)}`;
+    if (track.finished) {
+      track.cardCompletion.textContent = `${track.approximate ? "* " : ""}${formatDuration(completionDuration)}`;
+      track.cardCompletion.title = `${track.approximate ? "Estimated " : ""}duration from sync start to ${finishMethod}.`;
+    }
+    track.cardTimes.textContent = !track.finished
+      ? `Start: ${formatClock(completionStartTime)} · Last recorded: ${formatClock(track.absoluteEnd)}`
+      : `Start: ${formatClock(completionStartTime)} · Finish: ${formatClock(completionTime)}`;
     track.cardDetail.textContent =
       `${track.points.length.toLocaleString()} points · ${
         track.approximate ? "Estimated timing" : "Recorded GPX timestamps"
       }${gpsHoldNote(track)}${track.startTime ? " · Default-gate sync uses startTime" : ""} · ${
-        Number.isFinite(track.finishElapsed) ? "Finish-line crossing used" : "Track end used"
+        !track.finished
+          ? `DNF · ${formatDuration(track.dnfDuration)} to last recorded point`
+          : `${Number.isFinite(track.finishElapsed) ? "Finish-line crossing" : "Track end"} used`
       }`;
   } else {
-    track.cardCompletion.textContent = "Unavailable";
-    track.cardCompletion.title = "Completion duration unavailable";
+    track.cardCompletion.textContent = track.finished ? "Unavailable" : "DNF";
+    track.cardCompletion.title =
+      track.finished ? "Completion duration unavailable" : "Did not finish.";
     track.cardTimes.textContent = "Start and finish times unavailable";
     track.cardDetail.textContent =
       `${track.points.length.toLocaleString()} points · missing timing.start and timing.durationSeconds in the track manifest`;
@@ -1392,6 +1408,7 @@ function updateLeaderboard(positionStates) {
         mode === "relative"
           ? track.completionTime - track.absoluteStart - track.syncElapsed
           : track.completionTime;
+      const trackEndTime = pointTime(track, track.points.length - 1, mode);
       const raceStartTime = mode === "relative" ? 0 : track.completionStartTime;
       return {
         track,
@@ -1399,28 +1416,38 @@ function updateLeaderboard(positionStates) {
           currentTime < raceStartTime
             ? 0
             : getTwoCenterProgress(state.position, triangulationContext),
-        finished: currentTime >= finishTime,
+        finished: track.finished && currentTime >= finishTime,
+        didNotFinish: !track.finished && currentTime >= trackEndTime,
       };
     });
 
   const compareFinishers = (first, second) =>
     first.track.completionDuration - second.track.completionDuration ||
     first.track.order - second.track.order;
+  const compareDnfs = (first, second) =>
+    second.track.dnfDuration - first.track.dnfDuration ||
+    first.track.order - second.track.order;
+  const compareResult = (first, second) => {
+    if (first.didNotFinish !== second.didNotFinish) return first.didNotFinish ? 1 : -1;
+    return first.didNotFinish ? compareDnfs(first, second) : compareFinishers(first, second);
+  };
   const compareProgress = (first, second) => {
+    if (first.didNotFinish !== second.didNotFinish) return first.didNotFinish ? 1 : -1;
+    if (first.didNotFinish) return compareDnfs(first, second);
     if (first.finished !== second.finished) return first.finished ? -1 : 1;
     if (first.finished) return compareFinishers(first, second);
     return second.progress - first.progress || first.track.order - second.track.order;
   };
   const ranking = [...entries].sort(
     mode === "absolute"
-      ? compareFinishers
+      ? compareResult
       : compareProgress,
   );
 
   const wasHidden = ui.leaderboard.hidden;
   ui.leaderboard.hidden = false;
   const signature = JSON.stringify(
-    ranking.map(({ track, finished }) => [track.name, finished]),
+    ranking.map(({ track, finished, didNotFinish }) => [track.name, finished, didNotFinish]),
   );
   if (signature === lastLeaderboardSignature) return;
   lastLeaderboardSignature = signature;
@@ -1438,7 +1465,7 @@ function updateLeaderboard(positionStates) {
     for (const animation of row.getAnimations?.() ?? []) animation.cancel();
   }
 
-  const rows = ranking.map(({ track, finished }, index) => {
+  const rows = ranking.map(({ track, finished, didNotFinish }, index) => {
     const row = existingRows.get(track.name) ?? createLeaderboardRow(track);
     const place = row.querySelector(".leaderboard-place");
     place.textContent = String(index + 1);
@@ -1447,10 +1474,14 @@ function updateLeaderboard(positionStates) {
       `${mode === "absolute" ? "Completion result" : "Two-center angle"} rank ${index + 1}`,
     );
     const completion = row.querySelector(".leaderboard-time");
-    completion.textContent = finished
+    completion.textContent = didNotFinish
+      ? "DNF"
+      : finished
       ? `${track.approximate ? "* " : ""}${formatDuration(track.completionDuration)}`
       : "";
-    completion.title = finished
+    completion.title = didNotFinish
+      ? `Did not finish; ordered by ${formatDuration(track.dnfDuration)} from sync start to last recorded point.`
+      : finished
       ? `${track.approximate ? "Estimated " : ""}elapsed time to ${
           Number.isFinite(track.finishElapsed) ? "finish-line crossing" : "end of recorded track"
         }.`
@@ -1667,9 +1698,10 @@ function sortParticipantList() {
   const sortedTracks = [...tracks].sort((first, second) => {
     if (first.timingReady !== second.timingReady) return first.timingReady ? -1 : 1;
     if (first.timingReady) {
-      const firstDuration = first.completionDuration ?? first.absoluteEnd - first.absoluteStart;
-      const secondDuration = second.completionDuration ?? second.absoluteEnd - second.absoluteStart;
-      const durationDifference = firstDuration - secondDuration;
+      if (first.finished !== second.finished) return first.finished ? -1 : 1;
+      const durationDifference = first.finished
+        ? first.completionDuration - second.completionDuration
+        : second.dnfDuration - first.dnfDuration;
       if (durationDifference !== 0) return durationDifference;
     }
     return first.order - second.order;
