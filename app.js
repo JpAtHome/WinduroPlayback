@@ -25,8 +25,6 @@ const TRACK_COLORS = [
   "#6eda1b",
 ];
 
-// The Formula Discipline will be included in the Windsurf filter.
-// I'm adding special internal handling so Troy feels special
 const DISCIPLINES = ["Windsurf", "Windfoil", "Wingfoil", "Parawing", "Formula"];
 
 const TILE_URL =
@@ -1726,7 +1724,7 @@ function updateDisciplineFilterButtons() {
 }
 
 function toggleDisciplineVisibility(discipline) {
-  const disciplineTracks = tracks.filter((track) => (track.discipline === discipline || (track.discipline == "Formula" && discipline == "Windsurf")));
+  const disciplineTracks = tracks.filter((track) => track.discipline === discipline);
   if (disciplineTracks.length === 0) return;
 
   const visible = !disciplineTracks.every((track) => track.visible);

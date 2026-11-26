@@ -336,15 +336,14 @@ button:disabled {
 }
 
 .discipline-filters {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-bottom: 10px;
 }
 
 .discipline-filter {
   min-width: 0;
-  flex: 1 1 auto;
   padding: 5px 8px;
   font-size: 0.68rem;
 }
